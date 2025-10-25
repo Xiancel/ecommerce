@@ -19,17 +19,61 @@ func NewService(productRepo repository.ProductRepository) ProductService {
 
 // CheckAvailability implements ProductService.
 func (s *service) CheckAvailability(ctx context.Context, id uuid.UUID, quantity int) (bool, error) {
-	panic("unimplemented")
+	product, err := s.productRepo.GetById(ctx, id)
+	if err != nil {
+		return false, nil
+	}
+	return product.Stock >= quantity, nil
 }
 
 // CreateProduct implements ProductService.
 func (s *service) CreateProduct(ctx context.Context, req CreateProductRequest) (*models.Product, error) {
-	panic("unimplemented")
+	if req.Name == "" {
+		return nil, ErrProductNameRequired
+	}
+
+	if req.Price <= 0 {
+		return nil, ErrInvalidPrice
+	}
+
+	if req.Stock < 0 {
+		return nil, ErrInvalidStock
+	}
+
+	var description *string
+	if req.Description != "" {
+		description = &req.Description
+	}
+
+	var imageURL *string
+	if req.ImageURL != "" {
+		imageURL = &req.ImageURL
+	}
+
+	product := &models.Product{
+		Name:        req.Name,
+		Description: description,
+		Price:       req.Price,
+		Stock:       req.Stock,
+		CategoryID:  req.CategoryID,
+		ImageURL:    imageURL,
+	}
+
+	if err := s.productRepo.Create(ctx, product); err != nil {
+		return nil, fmt.Errorf("failed to create product: %w", err)
+	}
+
+	return product, nil
 }
 
 // GetProduct implements ProductService.
 func (s *service) GetProduct(ctx context.Context, id uuid.UUID) (*models.Product, error) {
-	panic("unimplemented")
+	product, err := s.productRepo.GetById(ctx, id)
+	if err != nil {
+		return nil, ErrProductNotFound
+	}
+
+	return product, nil
 }
 
 // ListProduct implements ProductService.
@@ -84,20 +128,101 @@ func (s *service) ListProduct(ctx context.Context, filter ProductFilter) (*Produ
 
 // ReleaseStock implements ProductService.
 func (s *service) ReleaseStock(ctx context.Context, id uuid.UUID, quantity int) error {
-	panic("unimplemented")
+	product, err := s.productRepo.GetById(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	product.Stock += quantity
+	return s.productRepo.Update(ctx, product)
 }
 
 // ReserveStock implements ProductService.
 func (s *service) ReserveStock(ctx context.Context, id uuid.UUID, quantity int) error {
-	panic("unimplemented")
+	product, err := s.productRepo.GetById(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	if product.Stock < quantity {
+		return ErrInvalidStock
+	}
+
+	product.Stock -= quantity
+
+	return s.productRepo.Update(ctx, product)
 }
 
 // SearchProduct implements ProductService.
 func (s *service) SearchProduct(ctx context.Context, query string, limit int, offset int) ([]*models.Product, error) {
-	panic("unimplemented")
+	if query == "" {
+		return []*models.Product{}, nil
+	}
+
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		limit = 0
+	}
+
+	filter := models.ListFilter{
+		Search: query,
+		Limit:  limit,
+		Offset: offset,
+	}
+
+	products, err := s.productRepo.List(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search product: %w", err)
+	}
+
+	return products, nil
 }
 
 // UpdateProduct implements ProductService.
-func (s *service) UpdateProduct(ctx context.Context, id uuid.UUID, query string, req UpdateProductRequest) ([]*models.Product, error) {
-	panic("unimplemented")
+func (s *service) UpdateProduct(ctx context.Context, id uuid.UUID, query string, req UpdateProductRequest) (*models.Product, error) {
+	product, err := s.productRepo.GetById(ctx, id)
+	if err != nil {
+		return nil, ErrProductNotFound
+	}
+
+	if req.Name != nil {
+		if *req.Name == "" {
+			return nil, ErrProductNameRequired
+		}
+		product.Name = *req.Name
+	}
+	if req.Description != nil {
+		product.Description = req.Description
+	}
+	if req.Price != nil {
+		if *req.Price <= 0 {
+			return nil, ErrInvalidPrice
+		}
+		product.Price = *req.Price
+	}
+	if req.Stock != nil {
+		if *req.Stock <= 0 {
+			return nil, ErrInvalidStock
+		}
+		product.Stock = *req.Stock
+	}
+
+	if req.CategoryID != nil {
+		product.CategoryID = req.CategoryID
+	}
+
+	if req.ImageURL != nil {
+		product.ImageURL = req.ImageURL
+	}
+
+	if err := s.productRepo.Update(ctx, product); err != nil {
+		return nil, fmt.Errorf("failed to update product: %w", err)
+	}
+
+	return product, nil
 }

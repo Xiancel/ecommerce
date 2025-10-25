@@ -12,7 +12,7 @@ type ProductService interface {
 	GetProduct(ctx context.Context, id uuid.UUID) (*models.Product, error)
 	ListProduct(ctx context.Context, filter ProductFilter) (*ProductListResponse, error)
 	SearchProduct(ctx context.Context, query string, limit, offset int) ([]*models.Product, error)
-	UpdateProduct(ctx context.Context, id uuid.UUID, query string, req UpdateProductRequest) ([]*models.Product, error)
+	UpdateProduct(ctx context.Context, id uuid.UUID, query string, req UpdateProductRequest) (*models.Product, error)
 	CheckAvailability(ctx context.Context, id uuid.UUID, quantity int) (bool, error)
 	ReserveStock(ctx context.Context, id uuid.UUID, quantity int) error
 	ReleaseStock(ctx context.Context, id uuid.UUID, quantity int) error
