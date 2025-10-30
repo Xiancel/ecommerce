@@ -16,4 +16,5 @@ var (
 	ErrInvalidPassword    = errors.New("invalid password")
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrUnauthorized       = errors.New("unauthorized access")
+	ErrInvalidRole        = errors.New("invalid role")
 )
