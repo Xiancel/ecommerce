@@ -1,6 +1,9 @@
 package cart
 
-import "github.com/google/uuid"
+import (
+	models "github.com/Xiancel/ecommerce/internal/domain"
+	"github.com/google/uuid"
+)
 
 type AddCartItemRequest struct {
 	ProductID uuid.UUID
@@ -12,16 +15,16 @@ type UpdateCartItemRequest struct {
 	Quantity  int
 }
 
-type CartItemResponse struct {
-	ProductID    *uuid.UUID
-	ProductName  string
-	ProductPrice float64
-	ProductStock int
-	Quantity     int
-	TotalPrice   float64
-}
+// type CartItemResponse struct {
+// 	ProductID    *uuid.UUID
+// 	ProductName  string
+// 	ProductPrice float64
+// 	ProductStock int
+// 	Quantity     int
+// 	TotalPrice   float64
+// }
 
 type CartListResponse struct {
-	Items      []CartItemResponse
+	Items      []*models.CartItem
 	TotalPrice float64
 }

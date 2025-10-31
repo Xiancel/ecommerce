@@ -5,7 +5,6 @@ import (
 )
 
 // добавить `json`и валидейт
-
 type CreateOrderRequset struct {
 	UserID         uuid.UUID
 	Items          []OrderItemInput
