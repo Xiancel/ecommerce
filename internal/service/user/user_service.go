@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	models "github.com/Xiancel/ecommerce/internal/domain"
 	repository "github.com/Xiancel/ecommerce/internal/repository/postgres"
@@ -33,12 +34,51 @@ func (s *service) DeleteUser(ctx context.Context, id uuid.UUID) error {
 
 // GetUser implements UserService.
 func (s *service) GetUser(ctx context.Context, id uuid.UUID) (*models.User, error) {
-	panic("unimplemented")
+	if id == uuid.Nil {
+		return nil, ErrUserNotFound
+	}
+
+	user, err := s.userRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("faield to get user: %w", err)
+	}
+
+	return user, nil
 }
 
 // ListUser implements UserService.
 func (s *service) ListUser(ctx context.Context, filter UserFilter) (*UserListResponse, error) {
-	panic("unimplemented")
+	if filter.Limit <= 0 {
+		filter.Limit = 20
+	}
+	if filter.Limit > 100 {
+		filter.Limit = 100
+	}
+	if filter.Offset < 0 {
+		filter.Offset = 0
+	}
+	users, err := s.userRepo.List(ctx, filter.Limit, filter.Offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list users: %w", err)
+	}
+
+	filtered := []*models.User{}
+	for _, u := range users {
+		if filter.Role != nil && u.Role != *filter.Role {
+			continue
+		}
+		if filter.Search != "" && !strings.Contains(strings.ToLower(u.FirstName),
+			strings.ToLower(filter.Search)) && !strings.Contains(strings.ToLower(u.LastName), strings.ToLower(filter.Search)) {
+			continue
+		}
+		filtered = append(filtered, u)
+	}
+	resp := &UserListResponse{
+		Users: filtered,
+		Total: len(filtered),
+	}
+
+	return resp, nil
 }
 
 // Login implements UserService.

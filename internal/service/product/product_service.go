@@ -85,7 +85,7 @@ func (s *service) ListProduct(ctx context.Context, filter ProductFilter) (*Produ
 		filter.Limit = 100
 	}
 	if filter.Offset < 0 {
-		filter.Limit = 0
+		filter.Offset = 0
 	}
 	if filter.MinPrice != nil && *filter.MinPrice < 0 {
 		return nil, ErrInvalidPrice
