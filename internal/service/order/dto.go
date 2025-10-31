@@ -1,42 +1,25 @@
 package order
 
 import (
+	models "github.com/Xiancel/ecommerce/internal/domain"
 	"github.com/google/uuid"
 )
 
 // добавить `json`и валидейт
 type CreateOrderRequset struct {
 	UserID         uuid.UUID
-	Items          []OrderItemInput
-	ShippingAdress ShippingAdress
+	Items          []models.OrderItem
+	ShippingAdress models.ShippingAddress
 	PaymentMethod  string
 }
 
-type OrderItemInput struct {
-	ProductID uuid.UUID
-	Quantity  int
+type UpdateOrderRequest struct {
+	Status string
 }
 
-type ShippingAdress struct {
-	Street     string
-	City       string
-	PostalCode string
-	Country    string
-}
-
-type OrderResponse struct {
-	ID             uuid.UUID
-	UserID         *uuid.UUID
-	Status         string
-	TotalAmount    float64
-	ShippingAdress ShippingAdress
-	PaymentMethod  string
-}
-
-type OrderItemResponse struct {
-	ProductID uuid.UUID
-	Quantity  int
-	Price     float64
+type OrderListResponse struct {
+	Order []*models.Order
+	Total int
 }
 
 type OrderFilter struct {
