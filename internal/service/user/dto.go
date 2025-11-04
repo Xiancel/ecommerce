@@ -2,14 +2,6 @@ package user
 
 import models "github.com/Xiancel/ecommerce/internal/domain"
 
-type CreateUserRequest struct {
-	Email     string `json:"email" validate:"required,email"`
-	Password  string `json:"password" validate:"required,min=6,max=100"`
-	FirstName string `json:"first_name" validate:"required,min=2,max=100"`
-	LastName  string `json:"last_name" validate:"required,min=2,max=100"`
-	Role      string `json:"role" validate:"omitempty,oneof=user admin"`
-}
-
 type UpdateUserRequest struct {
 	Email     *string `json:"email" validate:"omitempty,email"`
 	Password  *string `json:"password" validate:"omitempty,min=6,max=100"`

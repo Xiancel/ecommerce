@@ -81,64 +81,6 @@ func (s *service) ListUser(ctx context.Context, filter UserFilter) (*UserListRes
 	return resp, nil
 }
 
-// Login implements UserService.
-func (s *service) Login(ctx context.Context, email string, password string) (*models.User, error) {
-	user, err := s.userRepo.GetByEmail(ctx, email)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get email: %w", err)
-	}
-	if user.PasswordHash != password {
-		return nil, ErrInvalidPassword
-	}
-
-	return user, nil
-}
-
-// RegisterUser implements UserService.
-func (s *service) RegisterUser(ctx context.Context, req CreateUserRequest) (*models.User, error) {
-	if req.FirstName == "" {
-		return nil, ErrUserFNameRequired
-	}
-	if req.LastName == "" {
-		return nil, ErrUserLNameRequired
-	}
-	if req.Password == "" {
-		return nil, ErrUserPasswordRequired
-	}
-	if req.Email == "" {
-		return nil, ErrUserEmailRequired
-	}
-
-	if req.Role == "" {
-		req.Role = "user"
-	} else if req.Role != "user" && req.Role != "admin" {
-		return nil, ErrInvalidRole
-	}
-
-	existUser, err := s.userRepo.GetByEmail(ctx, req.Email)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get email: %w", err)
-	}
-	if existUser != nil {
-		return nil, ErrUserAlreadyExists
-	}
-
-	user := &models.User{
-		Email:        req.Email,
-		PasswordHash: req.Password,
-		FirstName:    req.FirstName,
-		LastName:     req.LastName,
-		Role:         req.Role,
-	}
-
-	if err := s.userRepo.Create(ctx, user); err != nil {
-		return nil, fmt.Errorf("failed to register user: %w", err)
-	}
-
-	return user, nil
-
-}
-
 // UpdateUser implements UserService.
 func (s *service) UpdateUser(ctx context.Context, id uuid.UUID, req UpdateUserRequest) (*models.User, error) {
 	user, err := s.userRepo.GetByID(ctx, id)
@@ -147,7 +89,7 @@ func (s *service) UpdateUser(ctx context.Context, id uuid.UUID, req UpdateUserRe
 	}
 	if req.Email == nil && req.FirstName == nil && req.LastName == nil &&
 		req.Password == nil && req.Role == nil {
-		return nil, fmt.Errorf("no fields to update")
+		return nil, ErrNoFields
 	}
 
 	if req.Email != nil {
