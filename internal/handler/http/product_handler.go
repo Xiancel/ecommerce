@@ -208,7 +208,7 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-	updProd, err := h.ProductSrv.UpdateProduct(r.Context(), id, " ", req)
+	updProd, err := h.ProductSrv.UpdateProduct(r.Context(), id, req)
 	if err != nil {
 		handlerServiceError(w, err)
 		return
@@ -216,7 +216,6 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, updProd)
 }
 
-// utils
 func handlerServiceError(w http.ResponseWriter, err error) {
 	switch err {
 	case productSrv.ErrProductNotFound:
@@ -231,22 +230,4 @@ func handlerServiceError(w http.ResponseWriter, err error) {
 	default:
 		respondError(w, http.StatusInternalServerError, "Internal server error")
 	}
-}
-
-func respondError(w http.ResponseWriter, status int, msg string) {
-	respondJSON(w, status, ErrorResponse{
-		Error:  msg,
-		Status: status,
-	})
-}
-
-type ErrorResponse struct {
-	Error  string `json:"error"`
-	Status int    `json:"status"`
-}
-
-func respondJSON(w http.ResponseWriter, status int, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
 }
