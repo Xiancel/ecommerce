@@ -20,7 +20,7 @@ func NewService(orderRepo repository.OrderRepository) OrderService {
 // CancelOrder implements OrderService.
 func (s *service) CancelOrder(ctx context.Context, id uuid.UUID) error {
 	if id == uuid.Nil {
-		return fmt.Errorf("order id is required")
+		return ErrOrderIDRequired
 	}
 
 	order, err := s.orderRepo.GetById(ctx, id)
@@ -28,10 +28,10 @@ func (s *service) CancelOrder(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("failed to get order: %w", err)
 	}
 	if order.Status == "cancelled" {
-		return fmt.Errorf("order already cancelled")
+		return ErrOrderAlreadyCanceled
 	}
 	if order.Status == "delivered" {
-		return fmt.Errorf("cannot cancel a delivered order")
+		return ErrCannotCancelDelivered
 	}
 
 	if err := s.orderRepo.UpdateStatus(ctx, id, "cancelled"); err != nil {
@@ -44,26 +44,26 @@ func (s *service) CancelOrder(ctx context.Context, id uuid.UUID) error {
 // CreateOrder implements OrderService.
 func (s *service) CreateOrder(ctx context.Context, req CreateOrderRequset) (*models.Order, error) {
 	if req.UserID == uuid.Nil {
-		return nil, fmt.Errorf("user id required")
+		return nil, ErrUserIDRequired
 	}
 	if req.ShippingAdress.City == "" || req.ShippingAdress.Country == "" ||
 		req.ShippingAdress.PostalCode == "" || req.ShippingAdress.Street == "" {
-		return nil, fmt.Errorf("shipingadress required")
+		return nil, ErrShippingAddressRequired
 	}
 	if req.PaymentMethod != "Cash" && req.PaymentMethod != "Card" {
-		return nil, fmt.Errorf("invalid paymentMethod")
+		return nil, ErrPaymentMethodInvalid
 	}
 
 	if len(req.Items) == 0 {
-		return nil, fmt.Errorf("order must contain one item")
+		return nil, ErrOrderMustContainItem
 	}
 
 	for _, item := range req.Items {
 		if item.ProductID == uuid.Nil {
-			return nil, fmt.Errorf("product id is required")
+			return nil, ErrProductIDRequired
 		}
 		if item.Quantity <= 0 {
-			return nil, fmt.Errorf("invalid quantity product")
+			return nil, ErrInvalidProductQuantity
 		}
 	}
 
@@ -89,7 +89,7 @@ func (s *service) CreateOrder(ctx context.Context, req CreateOrderRequset) (*mod
 // GetOrder implements OrderService.
 func (s *service) GetOrder(ctx context.Context, id uuid.UUID) (*models.Order, error) {
 	if id == uuid.Nil {
-		return nil, fmt.Errorf("order id is required")
+		return nil, ErrOrderIDRequired
 	}
 
 	order, err := s.orderRepo.GetById(ctx, id)
@@ -143,17 +143,17 @@ func (s *service) ListOrder(ctx context.Context, filter OrderFilter) (*OrderList
 // UpdateOrderStatus implements OrderService.
 func (s *service) UpdateOrderStatus(ctx context.Context, id uuid.UUID, req UpdateOrderRequest) (*models.Order, error) {
 	if id == uuid.Nil {
-		return nil, fmt.Errorf("order id is required")
+		return nil, ErrOrderIDRequired
 	}
 	if req.Status == "" {
-		return nil, fmt.Errorf("status is required")
+		return nil, ErrStatusRequired
 	}
 
 	validStatus := map[string]bool{
 		"pending":   true,
 		"paid":      true,
 		"shipped":   true,
-		"cancelled": true,
+		"canceled":  true,
 		"delivered": true,
 	}
 	if !validStatus[req.Status] {

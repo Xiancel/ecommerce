@@ -5,27 +5,26 @@ import (
 	"github.com/google/uuid"
 )
 
-// добавить `json`и валидейт
 type CreateOrderRequset struct {
-	UserID         uuid.UUID
-	Items          []models.OrderItem
-	ShippingAdress models.ShippingAddress
-	PaymentMethod  string
+	UserID         uuid.UUID              `json:"user_id" validate:"required,uuid"`
+	Items          []models.OrderItem     `json:"items" validate:"required,dive"`
+	ShippingAdress models.ShippingAddress `json:"shipping_adress" validate:"required"`
+	PaymentMethod  string                 `json:"payment_method" validate:"required,oneof=card cash"`
 }
 
 type UpdateOrderRequest struct {
-	Status string
+	Status string `json:"status" validate:"required,oneof=pending paid shipped canceled delivered"`
 }
 
 type OrderListResponse struct {
-	Order []*models.Order
-	Total int
+	Order []*models.Order `json:"order"`
+	Total int             `json:"total"`
 }
 
 type OrderFilter struct {
-	UserID  *uuid.UUID
-	Status  string
-	Limit   int
-	Offset  int
-	OrderBy string
+	UserID  *uuid.UUID `json:"user_id" validate:"omitempty,uuid"`
+	Status  string     `json:"status" validate:"omitempty,oneof=pending paid shipped canceled delivered"`
+	Limit   int        `json:"limit" validate:"required,min=1,max=100"`
+	Offset  int        `json:"offset" validate:"gte=0"`
+	OrderBy string     `json:"order_by" validate:"omitempty,oneof=created_at_asc created_as_desc status_asc status_desc"`
 }
