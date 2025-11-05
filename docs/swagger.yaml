@@ -1,0 +1,148 @@
+basePath: /api/v1
+definitions:
+  http.ErrorResponse:
+    properties:
+      error:
+        type: string
+      status:
+        type: integer
+    type: object
+  models.Product:
+    properties:
+      category_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      image_url:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      stock:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  product.ProductListResponse:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      products:
+        items:
+          $ref: '#/definitions/models.Product'
+        type: array
+      total:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API для e-commerce платформи з управлінням продуктами, кошиком та замовленнями
+  title: E-Commerce API
+  version: "1.0"
+paths:
+  /products:
+    get:
+      consumes:
+      - application/json
+      description: Повертає список продуктів з можливістю фільтрації за категорією,
+        ціною, наявністю та пагінацією
+      parameters:
+      - description: Category ID (UUID)
+        in: query
+        name: category_id
+        type: string
+      - description: Мінімальна ціна
+        in: query
+        name: min_price
+        type: number
+      - description: Максимальна ціна
+        in: query
+        name: max_price
+        type: number
+      - description: Пошуковий запит
+        in: query
+        name: search
+        type: string
+      - description: Тільки товари в наявності
+        in: query
+        name: in_stock
+        type: boolean
+      - default: 20
+        description: Кількість елементів на сторінку
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - default: 0
+        description: Зміщення для пагінації
+        in: query
+        minimum: 0
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/product.ProductListResponse'
+        "400":
+          description: Invalid parameters
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Отримати список продуктів
+      tags:
+      - products
+  /products/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Повертає детальну інформацію про продукт за його унікальним ідентифікатором
+      parameters:
+      - description: Product ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Product'
+        "400":
+          description: Invalid product ID
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "404":
+          description: Product not found
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Отримати продукт за ID
+      tags:
+      - products
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
