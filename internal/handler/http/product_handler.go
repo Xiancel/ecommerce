@@ -32,7 +32,18 @@ func (h *ProductHandler) RegisterRoutes(r chi.Router) {
 	})
 }
 
-// handler
+// GetProduct godoc
+// @Summary Отримати продукт за ID
+// @Description Повертає детальну інформацію про продукт за його унікальним ідентифікатором
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param id path string true "Product ID (UUID)"
+// @Success 200 {object} models.Product
+// @Failure 400 {object} ErrorResponse "Invalid product ID"
+// @Failure 404 {object} ErrorResponse "Product not found"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /products/{id} [get]
 func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
@@ -49,6 +60,23 @@ func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, product)
 }
 
+// ListProducts godoc
+// @Summary Отримати список продуктів
+// @Description Повертає список продуктів з можливістю фільтрації за категорією, ціною, наявністю та пагінацією
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param category_id query string false "Category ID (UUID)"
+// @Param min_price query number false "Мінімальна ціна"
+// @Param max_price query number false "Максимальна ціна"
+// @Param search query string false "Пошуковий запит"
+// @Param in_stock query boolean false "Тільки товари в наявності"
+// @Param limit query integer false "Кількість елементів на сторінку" default(20) minimum(1) maximum(100)
+// @Param offset query integer false "Зміщення для пагінації" default(0) minimum(0)
+// @Success 200 {object} product.ProductListResponse
+// @Failure 400 {object} ErrorResponse "Invalid parameters"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /products [get]
 func (h *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 	filter := productSrv.ProductFilter{
 		Limit:  20,
