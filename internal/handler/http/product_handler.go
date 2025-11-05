@@ -54,7 +54,7 @@ func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 
 	product, err := h.ProductSrv.GetProduct(r.Context(), id)
 	if err != nil {
-		handlerServiceError(w, err)
+		handlerServiceProductError(w, err)
 		return
 	}
 	respondJSON(w, http.StatusOK, product)
@@ -136,7 +136,7 @@ func (h *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 
 	response, err := h.ProductSrv.ListProduct(r.Context(), filter)
 	if err != nil {
-		handlerServiceError(w, err)
+		handlerServiceProductError(w, err)
 	}
 	respondJSON(w, http.StatusOK, response)
 }
@@ -172,7 +172,7 @@ func (h *ProductHandler) SearchProduct(w http.ResponseWriter, r *http.Request) {
 
 	products, err := h.ProductSrv.SearchProduct(r.Context(), query, limit, offset)
 	if err != nil {
-		handlerServiceError(w, err)
+		handlerServiceProductError(w, err)
 		return
 	}
 	respondJSON(w, http.StatusOK, products)
@@ -188,7 +188,7 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 
 	createProd, err := h.ProductSrv.CreateProduct(r.Context(), req)
 	if err != nil {
-		handlerServiceError(w, err)
+		handlerServiceProductError(w, err)
 		return
 	}
 
@@ -210,13 +210,13 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 	updProd, err := h.ProductSrv.UpdateProduct(r.Context(), id, req)
 	if err != nil {
-		handlerServiceError(w, err)
+		handlerServiceProductError(w, err)
 		return
 	}
 	respondJSON(w, http.StatusOK, updProd)
 }
 
-func handlerServiceError(w http.ResponseWriter, err error) {
+func handlerServiceProductError(w http.ResponseWriter, err error) {
 	switch err {
 	case productSrv.ErrProductNotFound:
 		respondError(w, http.StatusNotFound, err.Error())
