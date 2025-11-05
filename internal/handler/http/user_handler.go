@@ -24,8 +24,8 @@ func (h *UserHandler) RegisterRoutes(r chi.Router) {
 	})
 	r.Group(func(r chi.Router) {
 		r.Get("/admin/user/{id}", h.GetUser)
-		r.Delete("/admin/user{id}", h.DeleteUser)
-		r.Put("/admin/user{id}", h.UpdateUser)
+		r.Delete("/admin/user/{id}", h.DeleteUser)
+		r.Put("/admin/user/{id}", h.UpdateUser)
 	})
 }
 
