@@ -184,7 +184,7 @@ func (s *service) SearchProduct(ctx context.Context, query string, limit int, of
 }
 
 // UpdateProduct implements ProductService.
-func (s *service) UpdateProduct(ctx context.Context, id uuid.UUID, query string, req UpdateProductRequest) (*models.Product, error) {
+func (s *service) UpdateProduct(ctx context.Context, id uuid.UUID, req UpdateProductRequest) (*models.Product, error) {
 	product, err := s.productRepo.GetById(ctx, id)
 	if err != nil {
 		return nil, ErrProductNotFound
