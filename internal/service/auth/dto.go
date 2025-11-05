@@ -24,6 +24,11 @@ type AuthResponse struct {
 	RefreshToken string       `json:"refresh_token"`
 	User         *models.User `json:"user"`
 }
+
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
 type Claims struct {
 	UserID uuid.UUID `json:"user_id"`
 	Email  string    `json:"email"`
