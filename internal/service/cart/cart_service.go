@@ -20,10 +20,10 @@ func NewService(cartRepo repository.CartRepository) CartService {
 // AddItem implements CartService.
 func (s *service) AddItem(ctx context.Context, userID uuid.UUID, req AddCartItemRequest) (*models.CartItem, error) {
 	if req.ProductID == uuid.Nil {
-		return nil, fmt.Errorf("product not found")
+		return nil, ErrProductNotFound
 	}
 	if req.Quantity <= 0 {
-		return nil, fmt.Errorf("empty quantity")
+		return nil, ErrEmptyQuantity
 	}
 
 	existItem, err := s.CartRepo.GetItem(ctx, userID, req.ProductID)
@@ -55,7 +55,7 @@ func (s *service) AddItem(ctx context.Context, userID uuid.UUID, req AddCartItem
 // ClearItem implements CartService.
 func (s *service) ClearItem(ctx context.Context, userID uuid.UUID) error {
 	if userID == uuid.Nil {
-		return fmt.Errorf("user id is required")
+		return ErrUserIDRequired
 	}
 
 	if err := s.CartRepo.Clear(ctx, userID); err != nil {
@@ -67,10 +67,10 @@ func (s *service) ClearItem(ctx context.Context, userID uuid.UUID) error {
 // DeleteItem implements CartService.
 func (s *service) DeleteItem(ctx context.Context, userID uuid.UUID, itemID uuid.UUID) error {
 	if userID == uuid.Nil {
-		return fmt.Errorf("user id is required")
+		return ErrUserIDRequired
 	}
 	if itemID == uuid.Nil {
-		return fmt.Errorf("item id is required")
+		return ErrItemIDRequired
 	}
 
 	existItem, err := s.CartRepo.GetItem(ctx, userID, itemID)
@@ -78,7 +78,7 @@ func (s *service) DeleteItem(ctx context.Context, userID uuid.UUID, itemID uuid.
 		return fmt.Errorf("failed get item: %w", err)
 	}
 	if existItem == nil {
-		return fmt.Errorf("item not found")
+		return ErrProductNotFound
 	}
 
 	if err := s.CartRepo.RemoveItem(ctx, itemID); err != nil {
@@ -116,13 +116,13 @@ func (s *service) ListItem(ctx context.Context, userID uuid.UUID) (*CartListResp
 // UpdateItem implements CartService.
 func (s *service) UpdateItem(ctx context.Context, userID uuid.UUID, itemID uuid.UUID, req UpdateCartItemRequest) (*models.CartItem, error) {
 	if userID == uuid.Nil {
-		return nil, fmt.Errorf("user id is required")
+		return nil, ErrUserIDRequired
 	}
 	if itemID == uuid.Nil {
-		return nil, fmt.Errorf("item id is required")
+		return nil, ErrItemIDRequired
 	}
 	if req.Quantity <= 0 {
-		return nil, fmt.Errorf("empty quantity")
+		return nil, ErrEmptyQuantity
 	}
 
 	existItem, err := s.CartRepo.GetItem(ctx, userID, itemID)
@@ -130,7 +130,7 @@ func (s *service) UpdateItem(ctx context.Context, userID uuid.UUID, itemID uuid.
 		return nil, fmt.Errorf("failed get item: %w", err)
 	}
 	if existItem == nil {
-		return nil, fmt.Errorf("item not found")
+		return nil, ErrProductNotFound
 	}
 
 	if req.ProductID != nil {

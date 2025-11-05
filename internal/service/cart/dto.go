@@ -6,16 +6,16 @@ import (
 )
 
 type AddCartItemRequest struct {
-	ProductID uuid.UUID
-	Quantity  int
+	ProductID uuid.UUID `json:"product_id" validate:"required,uuid"`
+	Quantity  int       `json:"quantity" validate:"required,gt=0"`
 }
 
 type UpdateCartItemRequest struct {
-	ProductID *uuid.UUID
-	Quantity  int
+	ProductID *uuid.UUID `json:"product_id" validate:"required,uuid"`
+	Quantity  int        `json:"quantity" validate:"required,gt=0"`
 }
 
 type CartListResponse struct {
-	Items      []*models.CartItem
-	TotalPrice float64
+	Items      []*models.CartItem `json:"items"`
+	TotalPrice float64            `json:"total_price"`
 }
