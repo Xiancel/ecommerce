@@ -23,7 +23,7 @@ func (h *CartHandler) RegisterRoutes(r chi.Router) {
 		r.Post("/cart/items", h.AddItem)
 		r.Put("/cart/items/{id}", h.UpdateItem)
 		r.Delete("/cart/items/{id}", h.DeleteItem)
-		r.Delete("/cart/clear", h.ClearCart)
+		r.Delete("/cart", h.ClearCart)
 	})
 }
 
