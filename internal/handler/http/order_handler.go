@@ -14,7 +14,7 @@ type OrderHandler struct {
 	OrderSrv orderSrv.OrderService
 }
 
-func NewOrderhandler(srv orderSrv.OrderService) *OrderHandler {
+func NewOrderHandler(srv orderSrv.OrderService) *OrderHandler {
 	return &OrderHandler{OrderSrv: srv}
 }
 
