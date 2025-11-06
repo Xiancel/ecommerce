@@ -39,12 +39,12 @@ func (h *OrderHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.OrderSrv.GetOrder(r.Context(), id)
+	order, err := h.OrderSrv.GetOrder(r.Context(), id)
 	if err != nil {
-		handlerServiceUserError(w, err)
+		handlerOrderError(w, err)
 		return
 	}
-	respondJSON(w, http.StatusOK, user)
+	respondJSON(w, http.StatusOK, order)
 }
 
 func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
@@ -113,6 +113,7 @@ func (h *OrderHandler) ListOrder(w http.ResponseWriter, r *http.Request) {
 		offset, err := strconv.Atoi(offsetStr)
 		if err != nil || offset < 0 {
 			respondError(w, http.StatusBadRequest, "Invalid Offset")
+
 		}
 		filter.Offset = offset
 	}
