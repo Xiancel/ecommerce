@@ -2,13 +2,21 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
-	database "github.com/Xiancel/ecommerce/internal/db"
-	models "github.com/Xiancel/ecommerce/internal/domain"
-	repository "github.com/Xiancel/ecommerce/internal/repository/postgres"
+	"github.com/Xiancel/ecommerce/internal/db"
+	httpHandler "github.com/Xiancel/ecommerce/internal/handler/http"
+	postgres "github.com/Xiancel/ecommerce/internal/repository/postgres"
+	authService "github.com/Xiancel/ecommerce/internal/service/auth"
+	cartService "github.com/Xiancel/ecommerce/internal/service/cart"
+	orderService "github.com/Xiancel/ecommerce/internal/service/order"
+	productService "github.com/Xiancel/ecommerce/internal/service/product"
+	userService "github.com/Xiancel/ecommerce/internal/service/user"
 	"github.com/joho/godotenv"
 )
 
@@ -23,91 +31,98 @@ import (
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token.
 
+func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using environment varibles")
+	}
+
+	dbHost := getEnv("DB_HOST", "db")
+	dbPort := getEnv("DB_PORT", "5432")
+	dbUser := getEnv("DB_USER", "user")
+	dbPassword := getEnv("DB_PASSWORD", "1234!")
+	dbName := getEnv("DB_NAME", "ecommerce_db")
+	dbSSLMode := getEnv("DB_SSLMODE", "disable")
+	serverPort := getEnv("APP_PORT", "8080")
+	jwtSecret := getEnv("JWT_SECRET", "JpWThVtZ5p0hIM9s7jFGucNvHdn59aTfzT7fQ2iqlt3rH2bnSKTwsm4B3Q3P")
+
+	dbConfig := db.Config{
+		Host:     dbHost,
+		Port:     dbPort,
+		User:     dbUser,
+		Password: dbPassword,
+		DBName:   dbName,
+		SSLMode:  dbSSLMode,
+	}
+
+	database, err := db.NewDB(dbConfig)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer database.Close()
+
+	log.Println("✅ Database connetion established")
+
+	productRepo := postgres.NewProductRepository(database)
+	userRepo := postgres.NewUserRepository(database)
+	cartRepo := postgres.NewCartRepository(database)
+	orderRepo := postgres.NewOrderRepository(database)
+
+	log.Println("✅ Repository initialized")
+
+	productSrv := productService.NewService(productRepo)
+	userSrv := userService.NewService(userRepo)
+	authSrv := authService.NewService(userRepo, jwtSecret)
+	cartSrv := cartService.NewService(cartRepo)
+	orderService := orderService.NewService(orderRepo)
+
+	log.Println("✅ Services initialized")
+
+	router := httpHandler.NewRouter(httpHandler.RouterConfig{
+		AuthService:    authSrv,
+		ProductService: productSrv,
+		CartService:    cartSrv,
+		OrderService:   orderService,
+		UserService:    userSrv,
+	})
+
+	log.Println("✅ HTTP router initialized")
+
+	server := &http.Server{
+		Addr:         ":" + serverPort,
+		Handler:      router,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	go func() {
+		log.Printf("🚀 Server starting on http://localhost:%s", serverPort)
+		log.Printf("📚 API documentation: http://localhost:%s/api/v1", serverPort)
+		log.Printf("🏥 Health check: http://localhost:%s/health", serverPort)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server failed to start: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("⚠️ Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalf("Server forced to shutdown: %v", err)
+	}
+
+	log.Println("✅ Server stopped gracefully")
+}
+
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
 	}
 	return defaultValue
-}
-
-// isRunningInDocker перевіряє, чи запущено застосунок у Docker контейнері
-func isRunningInDocker() bool {
-	_, err := os.Stat("/.dockerenv")
-	return err == nil
-}
-
-// loadDBConfig формує конфігурацію підключення до БД
-func loadDBConfig() database.Config {
-	_ = godotenv.Load() // ігноруємо помилку — для Docker це нормально
-
-	dbHost := getEnv("DB_HOST", "localhost")
-
-	// Якщо Docker відсутній, а DB_HOST вказує на "db" — підміняємо на localhost
-	if dbHost == "db" && !isRunningInDocker() {
-		dbHost = "localhost"
-	}
-
-	return database.Config{
-		Host:     dbHost,
-		Port:     getEnv("DB_PORT", "5432"),
-		User:     getEnv("DB_USER", ""),
-		Password: getEnv("DB_PASSWORD", ""),
-		DBName:   getEnv("DB_NAME", "ecommerce_db"),
-		SSLMode:  getEnv("DB_SSLMODE", "disable"),
-	}
-}
-func main() {
-	log.Println("🚀 Запуск сервісу ecommerce-api...")
-
-	dbConfig := loadDBConfig()
-	log.Printf("🔌 Підключення до бази: %s@%s:%s/%s",
-		dbConfig.User, dbConfig.Host, dbConfig.Port, dbConfig.DBName)
-
-	// Ініціалізація підключення
-	db, err := database.NewDB(dbConfig)
-	if err != nil {
-		log.Fatalf("❌ Помилка підключення до БД: %v", err)
-	}
-	defer db.Close()
-
-	log.Println("✅ З'єднання з базою даних встановлено!")
-
-	// Репозиторій продуктів
-	productRepo := repository.NewProductRepository(db)
-
-	// productSrv := product.NewService(dbConfig)
-	ctx := context.Background()
-
-	// Виведення списку товарів
-	log.Println("📦 Отримання списку товарів...")
-
-	filter := models.ListFilter{Limit: 100}
-	products, err := productRepo.List(ctx, filter)
-	if err != nil {
-		log.Fatalf("❌ Помилка отримання товарів: %v", err)
-	}
-
-	if len(products) == 0 {
-		log.Println("⚠️  База даних порожня — товарів не знайдено.")
-		return
-	}
-
-	fmt.Printf("\n✅ Знайдено товарів: %d\n", len(products))
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-
-	for i, p := range products {
-		fmt.Printf("[%02d] 🆔 %s\n", i+1, p.ID)
-		fmt.Printf("     📦 Назва: %s\n", p.Name)
-		fmt.Printf("     💰 Ціна: %.2f грн\n", p.Price)
-		fmt.Printf("     📊 На складі: %d шт.\n", p.Stock)
-		if p.Description != nil && *p.Description != "" {
-			fmt.Printf("     📝 Опис: %s\n", *p.Description)
-		}
-		if p.CategoryID != nil {
-			fmt.Printf("     🏷  Категорія ID: %s\n", *p.CategoryID)
-		}
-		fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	}
-
-	log.Println("✨ Програма завершена успішно!")
 }
