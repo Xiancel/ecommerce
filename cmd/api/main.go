@@ -25,12 +25,10 @@ import (
 // @description API для e-commerce платформи з управлінням продуктами, кошиком та замовленнями
 // @host localhost:8080
 // @BasePath /api/v1
-
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token.
-
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment varibles")

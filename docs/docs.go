@@ -235,8 +235,6 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "API для e-commerce платформи з управлінням продуктами, кошиком та замовленнями",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
-	LeftDelim:        "{{",
-	RightDelim:       "}}",
 }
 
 func init() {

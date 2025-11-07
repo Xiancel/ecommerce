@@ -36,9 +36,9 @@ func NewRouter(config RouterConfig) *chi.Mux {
 		})
 	})
 
-	r.Get("/swagger/", httpSwagger.Handler(httpSwagger.URL("http://localhost:8080/swagger/doc.json")))
+	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("http://localhost:8080/swagger/doc.json")))
 
-	r.Route("api/v1", func(r chi.Router) {
+	r.Route("/api/v1", func(r chi.Router) {
 		authHandler := NewAuthHandler(config.AuthService)
 		authHandler.RegisterRoutes(r)
 
