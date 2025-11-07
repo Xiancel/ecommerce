@@ -25,10 +25,6 @@ func (h *OrderHandler) RegisterRoutes(r chi.Router) {
 		r.Post("/orders", h.CreateOrder)
 		r.Put("/orders/{id}/cancel", h.CancelOrder)
 	})
-	r.Group(func(r chi.Router) {
-		r.Get("/admin/orders", h.ListAllOrder)
-		r.Put("/admin/orders/{id}/status", h.UpdateOrderStatus)
-	})
 }
 
 func (h *OrderHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
@@ -123,59 +119,6 @@ func (h *OrderHandler) ListOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondJSON(w, http.StatusOK, orders)
-}
-
-//ADMIN
-
-func (h *OrderHandler) ListAllOrder(w http.ResponseWriter, r *http.Request) {
-	filter := orderSrv.OrderFilter{
-		Limit:  20,
-		Offset: 0,
-	}
-	filter.Status = r.URL.Query().Get("status")
-
-	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
-		limit, err := strconv.Atoi(limitStr)
-		if err != nil || limit <= 0 {
-			respondError(w, http.StatusBadRequest, "Invalid limit")
-		}
-		filter.Limit = limit
-	}
-
-	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
-		offset, err := strconv.Atoi(offsetStr)
-		if err != nil || offset < 0 {
-			respondError(w, http.StatusBadRequest, "Invalid Offset")
-		}
-		filter.Offset = offset
-	}
-
-	orders, err := h.OrderSrv.ListOrder(r.Context(), filter)
-	if err != nil {
-		handlerOrderError(w, err)
-		return
-	}
-	respondJSON(w, http.StatusOK, orders)
-}
-
-func (h *OrderHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, "InvalidID")
-		return
-	}
-	var req orderSrv.UpdateOrderRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid request body")
-		return
-	}
-	updOrders, err := h.OrderSrv.UpdateOrderStatus(r.Context(), id, req)
-	if err != nil {
-		handlerOrderError(w, err)
-		return
-	}
-	respondJSON(w, http.StatusOK, updOrders)
 }
 
 func handlerOrderError(w http.ResponseWriter, err error) {

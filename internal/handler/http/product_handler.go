@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -24,11 +23,6 @@ func (h *ProductHandler) RegisterRoutes(r chi.Router) {
 		r.Get("/products/search", h.SearchProduct)
 		r.Get("/products/{id}", h.GetProduct)
 		r.Get("/categories", h.ListCategories)
-	})
-
-	r.Group(func(r chi.Router) {
-		r.Post("/admin/products", h.CreateProduct)
-		r.Put("/admin/products/{id}", h.UpdateProduct)
 	})
 }
 
@@ -176,44 +170,6 @@ func (h *ProductHandler) SearchProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondJSON(w, http.StatusOK, products)
-}
-
-// ADMIN PART
-func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
-	var req productSrv.CreateProductRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid request body")
-		return
-	}
-
-	createProd, err := h.ProductSrv.CreateProduct(r.Context(), req)
-	if err != nil {
-		handlerServiceProductError(w, err)
-		return
-	}
-
-	respondJSON(w, http.StatusOK, createProd)
-}
-
-func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid product ID")
-		return
-	}
-
-	var req productSrv.UpdateProductRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid request body")
-		return
-	}
-	updProd, err := h.ProductSrv.UpdateProduct(r.Context(), id, req)
-	if err != nil {
-		handlerServiceProductError(w, err)
-		return
-	}
-	respondJSON(w, http.StatusOK, updProd)
 }
 
 func handlerServiceProductError(w http.ResponseWriter, err error) {
