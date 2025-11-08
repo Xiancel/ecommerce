@@ -3,6 +3,7 @@ package http
 import (
 	"net/http"
 
+	_ "github.com/Xiancel/ecommerce/docs"
 	authService "github.com/Xiancel/ecommerce/internal/service/auth"
 	cartService "github.com/Xiancel/ecommerce/internal/service/cart"
 	orderService "github.com/Xiancel/ecommerce/internal/service/order"
