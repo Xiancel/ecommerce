@@ -30,7 +30,7 @@ func NewProductRepository(db *database.DB) ProductRepository {
 // Create implements ProductRepository.
 func (p *productRepo) Create(ctx context.Context, product *models.Product) error {
 	query := `
-	INSER INTO products (id, name, description, price, stock, category_id, image_url, created_at, updated_at)
+	INSERT INTO products (id, name, description, price, stock, category_id, image_url, created_at, updated_at)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
 	`
 
@@ -76,7 +76,7 @@ func (p *productRepo) GetById(ctx context.Context, id uuid.UUID) (*models.Produc
 	WHERE id = $1
 	`
 
-	err := p.db.SelectContext(ctx, &product, query, id)
+	err := p.db.GetContext(ctx, &product, query, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get product: %w", err)
 	}
@@ -95,7 +95,7 @@ func (p *productRepo) List(ctx context.Context, filter models.ListFilter) ([]*mo
 	args := []interface{}{}
 	argsCount := 1
 
-	if filter.CategoryID != nil {
+	if filter.CategoryID != nil && *filter.CategoryID != uuid.Nil {
 		query += fmt.Sprintf(" AND category_id = $%d", argsCount)
 		args = append(args, *filter.CategoryID)
 		argsCount++
@@ -114,7 +114,7 @@ func (p *productRepo) List(ctx context.Context, filter models.ListFilter) ([]*mo
 	}
 
 	if filter.Search != "" {
-		query += fmt.Sprintf(" AND (name ILIKE $%d OR description ILIKE $%d ", argsCount, argsCount)
+		query += fmt.Sprintf(" AND (name ILIKE $%d OR description ILIKE $%d) ", argsCount, argsCount)
 		args = append(args, "%"+filter.Search+"%")
 		argsCount++
 	}
@@ -146,6 +146,7 @@ func (p *productRepo) List(ctx context.Context, filter models.ListFilter) ([]*mo
 		args = append(args, filter.Offset)
 		argsCount++
 	}
+
 	var products []*models.Product
 	err := p.db.SelectContext(ctx, &products, query, args...)
 	if err != nil {
@@ -191,7 +192,7 @@ func (p *productRepo) Update(ctx context.Context, product *models.Product) error
 func (p *productRepo) UpdateStock(ctx context.Context, id uuid.UUID, quantity int) error {
 	query := `
 	UPDATE products
-	SET stock := $1
+	SET stock = $1
 		updated_at = NOW()
 	WHERE id = $2
 	`
