@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Xiancel/ecommerce/internal/db"
+
 	httpHandler "github.com/Xiancel/ecommerce/internal/handler/http"
 	postgres "github.com/Xiancel/ecommerce/internal/repository/postgres"
 	authService "github.com/Xiancel/ecommerce/internal/service/auth"
@@ -17,7 +18,6 @@ import (
 	orderService "github.com/Xiancel/ecommerce/internal/service/order"
 	productService "github.com/Xiancel/ecommerce/internal/service/product"
 	userService "github.com/Xiancel/ecommerce/internal/service/user"
-	"github.com/joho/godotenv"
 )
 
 // @title E-Commerce API
@@ -30,10 +30,6 @@ import (
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token.
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, using environment varibles")
-	}
-
 	dbHost := getEnv("DB_HOST", "db")
 	dbPort := getEnv("DB_PORT", "5432")
 	dbUser := getEnv("DB_USER", "user")
@@ -41,7 +37,7 @@ func main() {
 	dbName := getEnv("DB_NAME", "ecommerce_db")
 	dbSSLMode := getEnv("DB_SSLMODE", "disable")
 	serverPort := getEnv("APP_PORT", "8080")
-	jwtSecret := getEnv("JWT_SECRET", "JpWThVtZ5p0hIM9s7jFGucNvHdn59aTfzT7fQ2iqlt3rH2bnSKTwsm4B3Q3P")
+	jwtSecret := getEnv("JWT_SECRET", "kfJ+JpWThVtZ5p0hIM9s7jFGucNvHdn59aTfzT7fQ2iqlt3rH2bnSKTwsm4B3Q3P")
 
 	dbConfig := db.Config{
 		Host:     dbHost,
