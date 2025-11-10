@@ -19,6 +19,9 @@ func NewService(productRepo repository.ProductRepository) ProductService {
 
 // CheckAvailability implements ProductService.
 func (s *service) CheckAvailability(ctx context.Context, id uuid.UUID, quantity int) (bool, error) {
+	if quantity == 0 {
+		return false, ErrInvalidQuantity
+	}
 	product, err := s.productRepo.GetById(ctx, id)
 	if err != nil {
 		return false, nil
