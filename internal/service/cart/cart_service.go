@@ -40,6 +40,7 @@ func (s *service) AddItem(ctx context.Context, userID uuid.UUID, req AddCartItem
 	}
 
 	item := &models.CartItem{
+		ID:        uuid.New(),
 		UserID:    userID,
 		ProductID: req.ProductID,
 		Quantity:  req.Quantity,
@@ -73,7 +74,7 @@ func (s *service) DeleteItem(ctx context.Context, userID uuid.UUID, itemID uuid.
 		return ErrItemIDRequired
 	}
 
-	existItem, err := s.CartRepo.GetItem(ctx, userID, itemID)
+	existItem, err := s.CartRepo.GetItemByID(ctx, userID, itemID)
 	if err != nil {
 		return fmt.Errorf("failed get item: %w", err)
 	}
@@ -81,7 +82,8 @@ func (s *service) DeleteItem(ctx context.Context, userID uuid.UUID, itemID uuid.
 		return ErrProductNotFound
 	}
 
-	if err := s.CartRepo.RemoveItem(ctx, itemID); err != nil {
+	if err := s.CartRepo.RemoveItem(ctx, userID, itemID); err != nil {
+		fmt.Println("DEBUG SERVICE LVL DElItem error:", err)
 		return fmt.Errorf("failed to delete item: %w", err)
 	}
 	return nil
