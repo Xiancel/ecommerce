@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Xiancel/ecommerce/internal/db"
+	"github.com/joho/godotenv"
 
 	httpHandler "github.com/Xiancel/ecommerce/internal/handler/http"
 	postgres "github.com/Xiancel/ecommerce/internal/repository/postgres"
@@ -30,6 +31,9 @@ import (
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token.
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using environment varibles")
+	}
 	dbHost := getEnv("DB_HOST", "db")
 	dbPort := getEnv("DB_PORT", "5432")
 	dbUser := getEnv("DB_USER", "user")
