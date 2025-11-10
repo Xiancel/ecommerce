@@ -20,18 +20,28 @@ const (
 func RequireAuth(authSrv authService.AuthService) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authHeader := r.Header.Get("Autorization")
+			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
 				respondError(w, http.StatusUnauthorized, "Missing auth header")
 				return
 			}
+			// parts := strings.Split(authHeader, " ")
+			// if len(parts) != 2 || parts[0] != "Bearer" {
+			// 	respondError(w, http.StatusUnauthorized, "Invalid auth header format")
+			// 	return
+			// }
+			var tokenString string
 			parts := strings.Split(authHeader, " ")
-			if len(parts) != 2 || parts[0] != "Bearer" {
+			if len(parts) == 2 && parts[0] == "Bearer" {
+				tokenString = parts[1] // формат "Bearer <token>"
+			} else if len(parts) == 1 {
+				tokenString = parts[0] // просто токен без Bearer
+			} else {
 				respondError(w, http.StatusUnauthorized, "Invalid auth header format")
 				return
 			}
 
-			tokenString := parts[1]
+			//tokenString := parts[1]
 			claims, err := authSrv.ValidateToken(tokenString)
 			if err != nil {
 				respondError(w, http.StatusUnauthorized, "Invalid or expired token")
