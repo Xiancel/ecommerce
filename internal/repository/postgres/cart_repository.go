@@ -43,7 +43,6 @@ func (c *CartRepo) AddItem(ctx context.Context, item *models.CartItem) error {
 		item.Quantity,
 	)
 	if err != nil {
-		fmt.Println("DEBUG repo LVL AddItem error:", err)
 		return fmt.Errorf("failed to add item: %w", err)
 	}
 
@@ -100,7 +99,6 @@ func (c *CartRepo) GetItemByID(ctx context.Context, userID, itemID uuid.UUID) (*
 	err := c.db.GetContext(ctx, &item, query, itemID, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			fmt.Println("DEBUG repo LVL GetItemByID error:", err)
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to get item by id: %w", err)
@@ -120,7 +118,6 @@ func (c *CartRepo) GetItem(ctx context.Context, userId uuid.UUID, productId uuid
 	err := c.db.GetContext(ctx, &item, query, userId, productId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			fmt.Println("DEBUG repo LVL GEtItem error:", err)
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to get item: %w", err)
@@ -128,24 +125,6 @@ func (c *CartRepo) GetItem(ctx context.Context, userId uuid.UUID, productId uuid
 	return &item, nil
 }
 
-// RemoveItem implements CartRepository.
-//
-//	func (c *CartRepo) RemoveItem(ctx context.Context, id uuid.UUID) error {
-//		query := `
-//		DELETE FROM cart_items
-//		WHERE id = $1
-//		`
-//		res, err := c.db.ExecContext(ctx, query, id)
-//		if err != nil {
-//			return fmt.Errorf("failed to remove item: %w", err)
-//		}
-//		rows, _ := res.RowsAffected()
-//		if rows == 0 {
-//			fmt.Println("DEBUG repo LVL DELItem error:", err)
-//			return fmt.Errorf("item not found")
-//		}
-//		return nil
-//	}
 func (c *CartRepo) RemoveItem(ctx context.Context, userID, id uuid.UUID) error {
 	query := `
 	DELETE FROM cart_items

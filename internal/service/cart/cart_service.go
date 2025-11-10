@@ -83,7 +83,6 @@ func (s *service) DeleteItem(ctx context.Context, userID uuid.UUID, itemID uuid.
 	}
 
 	if err := s.CartRepo.RemoveItem(ctx, userID, itemID); err != nil {
-		fmt.Println("DEBUG SERVICE LVL DElItem error:", err)
 		return fmt.Errorf("failed to delete item: %w", err)
 	}
 	return nil
