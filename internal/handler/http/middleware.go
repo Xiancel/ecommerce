@@ -33,9 +33,9 @@ func RequireAuth(authSrv authService.AuthService) func(http.Handler) http.Handle
 			var tokenString string
 			parts := strings.Split(authHeader, " ")
 			if len(parts) == 2 && parts[0] == "Bearer" {
-				tokenString = parts[1] // формат "Bearer <token>"
+				tokenString = parts[1] 
 			} else if len(parts) == 1 {
-				tokenString = parts[0] // просто токен без Bearer
+				tokenString = parts[0] 
 			} else {
 				respondError(w, http.StatusUnauthorized, "Invalid auth header format")
 				return
