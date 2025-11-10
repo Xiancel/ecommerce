@@ -44,6 +44,19 @@ func (h *AdminHandler) RegisterRoutes(r chi.Router) {
 }
 
 // Products
+
+// CreateProduct godoc
+// @Summary Створення продукту (Admin)
+// @Description Створює новий продукт
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param product body product.CreateProductRequest true "Дані продукту"
+// @Success 200 {object} models.Product
+// @Failure 400 {object} http.ErrorResponse "Invalid request body or validation error"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /admin/products [post]
 func (h *AdminHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var req productSrv.CreateProductRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -60,6 +73,20 @@ func (h *AdminHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, createProd)
 }
 
+// UpdateProduct godoc
+// @Summary Оновлення продукту (Admin)
+// @Description Оновлює існуючий продукт
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param id path string true "ID продукту"
+// @Param product body product.UpdateProductRequest true "Дані для оновлення"
+// @Success 200 {object} models.Product
+// @Failure 400 {object} http.ErrorResponse "Invalid request body or ID"
+// @Failure 404 {object} http.ErrorResponse "Product not found"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /admin/products/{id} [put]
 func (h *AdminHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
@@ -82,6 +109,21 @@ func (h *AdminHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 // Orders
+
+// ListAllOrder godoc
+// @Summary Отримати всі замовлення (Admin)
+// @Description Повертає список всіх замовлень з фільтром по статусу та пагінацією
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param status query string false "Статус замовлення (pending, paid, shipped, canceled, delivered)"
+// @Param limit query int false "Кількість елементів на сторінку" default(20)
+// @Param offset query int false "Зміщення для пагінації" default(0)
+// @Success 200 {object} order.OrderListResponse
+// @Failure 400 {object} http.ErrorResponse "Invalid query parameters"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /admin/orders [get]
 func (h *AdminHandler) ListAllOrder(w http.ResponseWriter, r *http.Request) {
 	filter := orderSrv.OrderFilter{
 		Limit:  20,
@@ -113,6 +155,20 @@ func (h *AdminHandler) ListAllOrder(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, orders)
 }
 
+// UpdateOrderStatus godoc
+// @Summary Оновлення статусу замовлення (Admin)
+// @Description Змінює статус конкретного замовлення
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param id path string true "ID замовлення"
+// @Param status body order.UpdateOrderRequest true "Новий статус замовлення"
+// @Success 200 {object} models.Order
+// @Failure 400 {object} http.ErrorResponse "Invalid request body or ID"
+// @Failure 404 {object} http.ErrorResponse "Order not found"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /admin/orders/{id}/status [put]
 func (h *AdminHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
@@ -134,6 +190,20 @@ func (h *AdminHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request)
 }
 
 // Users
+
+// GetUser godoc
+// @Summary Отримати користувача за ID (Admin)
+// @Description Повертає дані конкретного користувача
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param id path string true "ID користувача"
+// @Success 200 {object} models.User
+// @Failure 400 {object} http.ErrorResponse "Invalid user ID"
+// @Failure 404 {object} http.ErrorResponse "User not found"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /admin/users/{id} [get]
 func (h *AdminHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
@@ -150,6 +220,21 @@ func (h *AdminHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, user)
 }
 
+// ListUsers godoc
+// @Summary Отримати список користувачів (Admin)
+// @Description Повертає список користувачів з фільтром та пагінацією
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param search query string false "Пошуковий запит по імені або email"
+// @Param role query string false "Роль користувача (user, admin)"
+// @Param limit query int false "Кількість елементів на сторінку" default(20)
+// @Param offset query int false "Зміщення для пагінації" default(0)
+// @Success 200 {object} user.UserListResponse
+// @Failure 400 {object} http.ErrorResponse "Invalid query parameters"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /admin/users [get]
 func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	filter := userSrv.UserFilter{
 		Limit:  20,
@@ -184,6 +269,19 @@ func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, response)
 }
 
+// DeleteUser godoc
+// @Summary Видалення користувача (Admin)
+// @Description Видаляє конкретного користувача
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param id path string true "ID користувача"
+// @Success 200 {object} map[string]string "User deleted successfully"
+// @Failure 400 {object} http.ErrorResponse "Invalid user ID"
+// @Failure 404 {object} http.ErrorResponse "User not found"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /admin/users/{id} [delete]
 func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
@@ -200,6 +298,20 @@ func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// UpdateUser godoc
+// @Summary Оновлення користувача (Admin)
+// @Description Оновлює дані конкретного користувача
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Param id path string true "ID користувача"
+// @Param user body user.UpdateUserRequest true "Дані для оновлення"
+// @Success 200 {object} models.User
+// @Failure 400 {object} http.ErrorResponse "Invalid request body or ID"
+// @Failure 404 {object} http.ErrorResponse "User not found"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /admin/users/{id} [put]
 func (h *AdminHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)

@@ -27,6 +27,19 @@ func (h *CartHandler) RegisterRoutes(r chi.Router) {
 	})
 }
 
+// AddItem godoc
+// @Summary Додає товар у кошик
+// @Description Додає новий товар у кошик користувача
+// @Tags cart
+// @Accept json
+// @Produce json
+// @Param item body cart.AddCartItemRequest true "Товар для додавання"
+// @Success 201 {object} models.CartItem
+// @Failure 400 {object} http.ErrorResponse "Invalid request body or quantity"
+// @Failure 401 {object} http.ErrorResponse "User not authorized"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /cart/items [post]
 func (h *CartHandler) AddItem(w http.ResponseWriter, r *http.Request) {
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
@@ -47,6 +60,21 @@ func (h *CartHandler) AddItem(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusCreated, item)
 }
 
+// UpdateItem godoc
+// @Summary Оновлює товар у кошику
+// @Description Змінює кількість або товар у кошику користувача
+// @Tags cart
+// @Accept json
+// @Produce json
+// @Param id path string true "ID товару у кошику"
+// @Param item body cart.UpdateCartItemRequest true "Оновлені дані товару"
+// @Success 200 {object} models.CartItem
+// @Failure 400 {object} http.ErrorResponse "Invalid request body or quantity"
+// @Failure 401 {object} http.ErrorResponse "User not authorized"
+// @Failure 404 {object} http.ErrorResponse "Item not found"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /cart/items/{id} [put]
 func (h *CartHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
@@ -75,6 +103,20 @@ func (h *CartHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, item)
 }
 
+// DeleteItem godoc
+// @Summary Видаляє товар з кошика
+// @Description Видаляє конкретний товар з кошика користувача
+// @Tags cart
+// @Accept json
+// @Produce json
+// @Param id path string true "ID товару у кошику"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} http.ErrorResponse "Invalid item ID"
+// @Failure 401 {object} http.ErrorResponse "User not authorized"
+// @Failure 404 {object} http.ErrorResponse "Item not found"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /cart/items/{id} [delete]
 func (h *CartHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
@@ -97,6 +139,18 @@ func (h *CartHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 		"message": "item deleted",
 	})
 }
+
+// ClearCart godoc
+// @Summary Очищає кошик
+// @Description Видаляє всі товари з кошика користувача
+// @Tags cart
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]string
+// @Failure 401 {object} http.ErrorResponse "User not authorized"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /cart [delete]
 func (h *CartHandler) ClearCart(w http.ResponseWriter, r *http.Request) {
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
@@ -112,6 +166,18 @@ func (h *CartHandler) ClearCart(w http.ResponseWriter, r *http.Request) {
 		"message": "cart clear succesfully",
 	})
 }
+
+// ListItems godoc
+// @Summary Повертає список товарів у кошику
+// @Description Повертає всі товари користувача в кошику
+// @Tags cart
+// @Accept json
+// @Produce json
+// @Success 200 {object} cart.CartListResponse
+// @Failure 401 {object} http.ErrorResponse "User not authorized"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /cart [get]
 func (h *CartHandler) ListItems(w http.ResponseWriter, r *http.Request) {
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {

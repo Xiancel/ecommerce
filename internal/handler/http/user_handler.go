@@ -24,6 +24,18 @@ func (h *UserHandler) RegisterRoutes(r chi.Router) {
 
 }
 
+// ListUser godoc
+// @Summary Отримати інформацію про користувача
+// @Description Повертає дані користувача, який авторизований
+// @Tags users
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.User
+// @Failure 401 {object} http.ErrorResponse "User not authorized"
+// @Failure 404 {object} http.ErrorResponse "User not found"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /users [get]
 func (h *UserHandler) ListUser(w http.ResponseWriter, r *http.Request) {
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
@@ -38,6 +50,21 @@ func (h *UserHandler) ListUser(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, user)
 }
 
+// UpdateUser godoc
+// @Summary Оновити дані користувача
+// @Description Оновлює дані користувача (email, пароль, ім'я, прізвище, роль)
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param user body user.UpdateUserRequest true "Дані для оновлення користувача"
+// @Success 200 {object} models.User
+// @Failure 400 {object} http.ErrorResponse "Invalid request body or invalid fields"
+// @Failure 401 {object} http.ErrorResponse "User not authorized"
+// @Failure 404 {object} http.ErrorResponse "User not found"
+// @Failure 409 {object} http.ErrorResponse "Email already exists"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /users [put]
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {

@@ -27,6 +27,19 @@ func (h *OrderHandler) RegisterRoutes(r chi.Router) {
 	})
 }
 
+// GetOrder godoc
+// @Summary Отримати замовлення за ID
+// @Description Повертає детальну інформацію про замовлення за його унікальним ідентифікатором
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Param id path string true "Order ID (UUID)"
+// @Success 200 {object} models.Order
+// @Failure 400 {object} http.ErrorResponse "Invalid ID"
+// @Failure 404 {object} http.ErrorResponse "Order not found"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /orders/{id} [get]
 func (h *OrderHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
@@ -43,6 +56,19 @@ func (h *OrderHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, order)
 }
 
+// CreateOrder godoc
+// @Summary Створити замовлення
+// @Description Створює нове замовлення для авторизованого користувача
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Param order body order.CreateOrderRequset true "Дані замовлення"
+// @Success 201 {object} models.Order
+// @Failure 400 {object} http.ErrorResponse "Invalid request body"
+// @Failure 401 {object} http.ErrorResponse "User not authorized"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /orders [post]
 func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
@@ -66,6 +92,19 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusCreated, order)
 }
 
+// CancelOrder godoc
+// @Summary Скасувати замовлення
+// @Description Скасовує замовлення за ID (якщо воно ще не доставлене)
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Param id path string true "Order ID (UUID)"
+// @Success 200 {object} map[string]string "Order canceled message"
+// @Failure 400 {object} http.ErrorResponse "Invalid ID"
+// @Failure 409 {object} http.ErrorResponse "Cannot cancel order"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /orders/{id}/cancel [put]
 func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
@@ -82,6 +121,21 @@ func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// ListOrder godoc
+// @Summary Отримати список замовлень
+// @Description Повертає список замовлень користувача з можливістю фільтрації за статусом та пагінацією
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Param status query string false "Фільтр по статусу" Enums(pending, paid, shipped, canceled, delivered)
+// @Param limit query int false "Кількість елементів на сторінку" default(20)
+// @Param offset query int false "Зміщення для пагінації" default(0)
+// @Success 200 {object} order.OrderListResponse
+// @Failure 400 {object} http.ErrorResponse "Invalid parameters"
+// @Failure 401 {object} http.ErrorResponse "User not authorized"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /orders [get]
 func (h *OrderHandler) ListOrder(w http.ResponseWriter, r *http.Request) {
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {

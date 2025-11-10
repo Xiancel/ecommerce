@@ -135,11 +135,33 @@ func (h *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, response)
 }
 
+// ListCategories godoc
+// @Summary Отримати список категорій
+// @Description Повертає список всіх категорій продуктів
+// @Tags products
+// @Accept json
+// @Produce json
+// @Success 200 {array} interface{}
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Router /categories [get]
 func (h *ProductHandler) ListCategories(w http.ResponseWriter, r *http.Request) {
 	categories := []interface{}{}
 	respondJSON(w, http.StatusOK, categories)
 }
 
+// SearchProduct godoc
+// @Summary Пошук продуктів
+// @Description Повертає список продуктів, що відповідають пошуковому запиту
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param q query string true "Пошуковий запит"
+// @Param limit query integer false "Кількість елементів на сторінку" default(20) minimum(1) maximum(100)
+// @Param offset query integer false "Зміщення для пагінації" default(0) minimum(0)
+// @Success 200 {array} models.Product
+// @Failure 400 {object} http.ErrorResponse "Search query is required or invalid parameters"
+// @Failure 500 {object} http.ErrorResponse "Internal server error"
+// @Router /products/search [get]
 func (h *ProductHandler) SearchProduct(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	if query == "" {
