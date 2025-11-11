@@ -2,7 +2,9 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"time"
 
 	database "github.com/Xiancel/ecommerce/internal/db"
 	models "github.com/Xiancel/ecommerce/internal/domain"
@@ -28,6 +30,12 @@ func NewOrderRepository(db *database.DB) OrderRepository {
 
 // Create implements OrderRepository.
 func (o *orderRepo) Create(ctx context.Context, order *models.Order, items []*models.OrderItem) error {
+
+	shippingJSON, errjson := json.Marshal(order.ShippingAddress)
+	if errjson != nil {
+		return fmt.Errorf("failed to marshal shipping address: %w", errjson)
+	}
+
 	orderQuery := `
 	INSERT INTO orders (id, user_id, status, total_amount, shipping_address, payment_method, created_at, updated_at)
 	VALUES ($1, $2, $3, $4, $5,$6,NOW(),NOW())
@@ -38,7 +46,7 @@ func (o *orderRepo) Create(ctx context.Context, order *models.Order, items []*mo
 		order.UserID,
 		order.Status,
 		order.TotalAmount,
-		order.ShippingAddress,
+		shippingJSON,
 		order.PaymentMethod,
 	)
 	if err != nil {
@@ -68,17 +76,40 @@ func (o *orderRepo) Create(ctx context.Context, order *models.Order, items []*mo
 // GetById implements OrderRepository.
 func (o *orderRepo) GetById(ctx context.Context, id uuid.UUID) (*models.Order, error) {
 	var order models.Order
+	var shippingBytes []byte
+
 	query := `
 	SELECT id, user_id, status, total_amount, shipping_address, payment_method, created_at, updated_at
 	FROM orders
 	WHERE id = $1
 	`
-
-	err := o.db.GetContext(ctx, &order, query, id)
+	temp := struct {
+		ID            uuid.UUID  `db:"id"`
+		UserID        *uuid.UUID `db:"user_id"`
+		Status        string     `db:"status"`
+		TotalAmount   float64    `db:"total_amount"`
+		Shipping      []byte     `db:"shipping_address"`
+		PaymentMethod string     `db:"payment_method"`
+		CreatedAt     time.Time  `db:"created_at"`
+		UpdatedAt     time.Time  `db:"updated_at"`
+	}{}
+	err := o.db.GetContext(ctx, &temp, query, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get order id: %w", err)
 	}
 
+	order.ID = temp.ID
+	order.UserID = temp.UserID
+	order.Status = temp.Status
+	order.TotalAmount = temp.TotalAmount
+	order.PaymentMethod = temp.PaymentMethod
+	order.CreatedAt = temp.CreatedAt
+	order.UpdatedAt = temp.UpdatedAt
+	shippingBytes = temp.Shipping
+
+	if err := json.Unmarshal(shippingBytes, &order.ShippingAddress); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal shipping address: %w", err)
+	}
 	return &order, nil
 }
 
@@ -108,12 +139,38 @@ func (o *orderRepo) ListAll(ctx context.Context, limit int, offset int) ([]*mode
 	ORDER BY created_at DESC
 	LIMIT $1 OFFSET $2
 	`
+	// временна структура для роботи з shipping adress
+	var tempOrders []struct {
+		ID            uuid.UUID  `db:"id"`
+		UserID        *uuid.UUID `db:"user_id"`
+		Status        string     `db:"status"`
+		TotalAmount   float64    `db:"total_amount"`
+		Shipping      []byte     `db:"shipping_address"`
+		PaymentMethod string     `db:"payment_method"`
+		CreatedAt     time.Time  `db:"created_at"`
+		UpdatedAt     time.Time  `db:"updated_at"`
+	}
 
-	var orders []*models.Order
-
-	err := o.db.SelectContext(ctx, &orders, query, limit, offset)
+	err := o.db.SelectContext(ctx, &tempOrders, query, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list orders: %w", err)
+	}
+
+	orders := make([]*models.Order, len(tempOrders))
+	for i, temp := range tempOrders {
+		order := &models.Order{
+			ID:            temp.ID,
+			UserID:        temp.UserID,
+			Status:        temp.Status,
+			TotalAmount:   temp.TotalAmount,
+			PaymentMethod: temp.PaymentMethod,
+			CreatedAt:     temp.CreatedAt,
+			UpdatedAt:     temp.UpdatedAt,
+		}
+		if err := json.Unmarshal(temp.Shipping, &order.ShippingAddress); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal shipping address: %w", err)
+		}
+		orders[i] = order
 	}
 	return orders, nil
 }
@@ -128,11 +185,37 @@ func (o *orderRepo) ListByUserID(ctx context.Context, userID uuid.UUID, limit in
 	LIMIT $2 OFFSET $3
 	`
 
-	var orders []*models.Order
+	var tempOrders []struct {
+		ID            uuid.UUID  `db:"id"`
+		UserID        *uuid.UUID `db:"user_id"`
+		Status        string     `db:"status"`
+		TotalAmount   float64    `db:"total_amount"`
+		Shipping      []byte     `db:"shipping_address"`
+		PaymentMethod string     `db:"payment_method"`
+		CreatedAt     time.Time  `db:"created_at"`
+		UpdatedAt     time.Time  `db:"updated_at"`
+	}
 
-	err := o.db.SelectContext(ctx, &orders, query, userID, limit, offset)
+	err := o.db.SelectContext(ctx, &tempOrders, query, userID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list orders: %w", err)
+	}
+
+	orders := make([]*models.Order, len(tempOrders))
+	for i, temp := range tempOrders {
+		order := &models.Order{
+			ID:            temp.ID,
+			UserID:        temp.UserID,
+			Status:        temp.Status,
+			TotalAmount:   temp.TotalAmount,
+			PaymentMethod: temp.PaymentMethod,
+			CreatedAt:     temp.CreatedAt,
+			UpdatedAt:     temp.UpdatedAt,
+		}
+		if err := json.Unmarshal(temp.Shipping, &order.ShippingAddress); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal shipping address: %w", err)
+		}
+		orders[i] = order
 	}
 	return orders, nil
 }

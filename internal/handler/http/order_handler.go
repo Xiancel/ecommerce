@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -62,7 +63,7 @@ func (h *OrderHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
 // @Tags orders
 // @Accept json
 // @Produce json
-// @Param order body order.CreateOrderRequset true "Дані замовлення"
+// @Param order body order.CreateOrderRequest true "Дані замовлення"
 // @Success 201 {object} models.Order
 // @Failure 400 {object} http.ErrorResponse "Invalid request body"
 // @Failure 401 {object} http.ErrorResponse "User not authorized"
@@ -76,16 +77,15 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req orderSrv.CreateOrderRequset
+	var req orderSrv.CreateOrderRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
-	req.UserID = userID
-
-	order, err := h.OrderSrv.CreateOrder(r.Context(), req)
+	order, err := h.OrderSrv.CreateOrder(r.Context(), userID, req)
 	if err != nil {
+		fmt.Printf("handler lvl CreateOrder error: %+v\n", err)
 		handlerOrderError(w, err)
 		return
 	}
@@ -169,6 +169,7 @@ func (h *OrderHandler) ListOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	orders, err := h.OrderSrv.ListOrder(r.Context(), filter)
 	if err != nil {
+		fmt.Printf("Handler lvl error :%w", err)
 		handlerOrderError(w, err)
 		return
 	}

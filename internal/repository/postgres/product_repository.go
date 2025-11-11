@@ -33,7 +33,7 @@ func (p *productRepo) Create(ctx context.Context, product *models.Product) error
 	INSERT INTO products (id, name, description, price, stock, category_id, image_url, created_at, updated_at)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
 	`
-
+	product.ID = uuid.New()
 	_, err := p.db.ExecContext(ctx, query,
 		product.ID,
 		product.Name,

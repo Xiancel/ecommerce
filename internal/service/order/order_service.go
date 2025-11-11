@@ -3,6 +3,7 @@ package order
 import (
 	"context"
 	"fmt"
+	"time"
 
 	models "github.com/Xiancel/ecommerce/internal/domain"
 	repository "github.com/Xiancel/ecommerce/internal/repository/postgres"
@@ -10,11 +11,13 @@ import (
 )
 
 type service struct {
-	orderRepo repository.OrderRepository
+	orderRepo   repository.OrderRepository
+	productRepo repository.ProductRepository
 }
 
-func NewService(orderRepo repository.OrderRepository) OrderService {
-	return &service{orderRepo: orderRepo}
+func NewService(orderRepo repository.OrderRepository, productRepo repository.ProductRepository) OrderService {
+	return &service{orderRepo: orderRepo,
+		productRepo: productRepo}
 }
 
 // CancelOrder implements OrderService.
@@ -42,15 +45,15 @@ func (s *service) CancelOrder(ctx context.Context, id uuid.UUID) error {
 }
 
 // CreateOrder implements OrderService.
-func (s *service) CreateOrder(ctx context.Context, req CreateOrderRequset) (*models.Order, error) {
-	if req.UserID == uuid.Nil {
+func (s *service) CreateOrder(ctx context.Context, userID uuid.UUID, req CreateOrderRequest) (*models.Order, error) {
+	if userID == uuid.Nil {
 		return nil, ErrUserIDRequired
 	}
 	if req.ShippingAdress.City == "" || req.ShippingAdress.Country == "" ||
 		req.ShippingAdress.PostalCode == "" || req.ShippingAdress.Street == "" {
 		return nil, ErrShippingAddressRequired
 	}
-	if req.PaymentMethod != "Cash" && req.PaymentMethod != "Card" {
+	if req.PaymentMethod != "cash" && req.PaymentMethod != "card" {
 		return nil, ErrPaymentMethodInvalid
 	}
 
@@ -58,28 +61,37 @@ func (s *service) CreateOrder(ctx context.Context, req CreateOrderRequset) (*mod
 		return nil, ErrOrderMustContainItem
 	}
 
-	for _, item := range req.Items {
-		if item.ProductID == uuid.Nil {
-			return nil, ErrProductIDRequired
-		}
-		if item.Quantity <= 0 {
-			return nil, ErrInvalidProductQuantity
-		}
-	}
-
 	order := &models.Order{
-		UserID:          &req.UserID,
+		ID:              uuid.New(),
+		UserID:          &userID,
 		Status:          "pending",
-		PaymentMethod:   req.PaymentMethod,
 		ShippingAddress: req.ShippingAdress,
+		PaymentMethod:   req.PaymentMethod,
 	}
 
+	var total float64
 	items := make([]*models.OrderItem, len(req.Items))
-	for i := range req.Items {
-		items[i] = &req.Items[i]
+
+	for i, item := range req.Items {
+		product, err := s.productRepo.GetById(ctx, item.ProductID)
+		if err != nil {
+			return nil, fmt.Errorf("product not found: %w", err)
+		}
+
+		items[i] = &models.OrderItem{
+			ID:        uuid.New(),
+			OrderID:   order.ID,
+			ProductID: item.ProductID,
+			Quantity:  item.Quantity,
+			Price:     product.Price,
+			CreatedAt: time.Now(),
+		}
+		total += product.Price * float64(item.Quantity)
 	}
+	order.TotalAmount = total
 
 	if err := s.orderRepo.Create(ctx, order, items); err != nil {
+		fmt.Printf("Service lvl CreateOrder error: %+v\n", err)
 		return nil, fmt.Errorf("failed to create order: %w", err)
 	}
 

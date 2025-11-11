@@ -324,7 +324,7 @@ func (h *AdminHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-	updUser, err := h.userSrv.UpdateUser(r.Context(), id, req)
+	updUser, err := h.userSrv.UpdateUser(r.Context(), id, req,true)
 	if err != nil {
 		handlerServiceUserError(w, err)
 		return

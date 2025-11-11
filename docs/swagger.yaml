@@ -111,21 +111,6 @@ definitions:
       user_id:
         type: string
     type: object
-  models.OrderItem:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: string
-      order_id:
-        type: string
-      price:
-        type: number
-      product_id:
-        type: string
-      quantity:
-        type: integer
-    type: object
   models.Product:
     properties:
       category_id:
@@ -177,26 +162,34 @@ definitions:
       updated_at:
         type: string
     type: object
-  order.CreateOrderRequset:
+  order.CreateOrderItemRequest:
+    properties:
+      product_id:
+        type: string
+      quantity:
+        minimum: 1
+        type: integer
+    required:
+    - product_id
+    - quantity
+    type: object
+  order.CreateOrderRequest:
     properties:
       items:
         items:
-          $ref: '#/definitions/models.OrderItem'
+          $ref: '#/definitions/order.CreateOrderItemRequest'
         type: array
       payment_method:
         enum:
         - card
         - cash
         type: string
-      shipping_adress:
+      shipping_address:
         $ref: '#/definitions/models.ShippingAddress'
-      user_id:
-        type: string
     required:
     - items
     - payment_method
-    - shipping_adress
-    - user_id
+    - shipping_address
     type: object
   order.OrderListResponse:
     properties:
@@ -274,6 +267,23 @@ definitions:
       stock:
         minimum: 0
         type: integer
+    type: object
+  user.UpdateOwnUserRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      last_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      password:
+        maxLength: 100
+        minLength: 6
+        type: string
     type: object
   user.UpdateUserRequest:
     properties:
@@ -981,7 +991,7 @@ paths:
         name: order
         required: true
         schema:
-          $ref: '#/definitions/order.CreateOrderRequset'
+          $ref: '#/definitions/order.CreateOrderRequest'
       produces:
       - application/json
       responses:
@@ -1253,7 +1263,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/user.UpdateUserRequest'
+          $ref: '#/definitions/user.UpdateOwnUserRequest'
       produces:
       - application/json
       responses:

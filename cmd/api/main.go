@@ -71,7 +71,7 @@ func main() {
 	userSrv := userService.NewService(userRepo)
 	authSrv := authService.NewService(userRepo, jwtSecret)
 	cartSrv := cartService.NewService(cartRepo)
-	orderService := orderService.NewService(orderRepo)
+	orderService := orderService.NewService(orderRepo, productRepo)
 
 	log.Println("✅ Services initialized")
 

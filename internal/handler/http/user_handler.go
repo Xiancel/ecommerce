@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/Xiancel/ecommerce/internal/service/user"
 	userSrv "github.com/Xiancel/ecommerce/internal/service/user"
 	"github.com/go-chi/chi/v5"
 )
@@ -56,7 +57,7 @@ func (h *UserHandler) ListUser(w http.ResponseWriter, r *http.Request) {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param user body user.UpdateUserRequest true "Дані для оновлення користувача"
+// @Param user body user.UpdateOwnUserRequest true "Дані для оновлення користувача"
 // @Success 200 {object} models.User
 // @Failure 400 {object} http.ErrorResponse "Invalid request body or invalid fields"
 // @Failure 401 {object} http.ErrorResponse "User not authorized"
@@ -71,12 +72,19 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusUnauthorized, "User not authorized")
 		return
 	}
-	var req userSrv.UpdateUserRequest
+	var req userSrv.UpdateOwnUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-	updUser, err := h.UserSrv.UpdateUser(r.Context(), userID, req)
+	updReq := user.UpdateUserRequest{
+		Email:     req.Email,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Password:  req.Password,
+		Role:      nil,
+	}
+	updUser, err := h.UserSrv.UpdateUser(r.Context(), userID, updReq, false)
 	if err != nil {
 		handlerServiceUserError(w, err)
 		return

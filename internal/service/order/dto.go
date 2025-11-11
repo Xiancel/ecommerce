@@ -5,11 +5,15 @@ import (
 	"github.com/google/uuid"
 )
 
-type CreateOrderRequset struct {
-	UserID         uuid.UUID              `json:"user_id" validate:"required,uuid"`
-	Items          []models.OrderItem     `json:"items" validate:"required,dive"`
-	ShippingAdress models.ShippingAddress `json:"shipping_adress" validate:"required"`
-	PaymentMethod  string                 `json:"payment_method" validate:"required,oneof=card cash"`
+type CreateOrderItemRequest struct {
+	ProductID uuid.UUID `json:"product_id" validate:"required"`
+	Quantity  int       `json:"quantity" validate:"required,min=1"`
+}
+
+type CreateOrderRequest struct {
+	Items          []CreateOrderItemRequest `json:"items" validate:"required,dive"`
+	ShippingAdress models.ShippingAddress   `json:"shipping_address" validate:"required"`
+	PaymentMethod  string                   `json:"payment_method" validate:"required,oneof=card cash"`
 }
 
 type UpdateOrderRequest struct {

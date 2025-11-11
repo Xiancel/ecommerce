@@ -10,6 +10,6 @@ import (
 type UserService interface {
 	GetUser(ctx context.Context, id uuid.UUID) (*models.User, error)
 	ListUser(ctx context.Context, filter UserFilter) (*UserListResponse, error)
-	UpdateUser(ctx context.Context, id uuid.UUID, req UpdateUserRequest) (*models.User, error)
+	UpdateUser(ctx context.Context, id uuid.UUID, req UpdateUserRequest, isAdmin bool) (*models.User, error)
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 }

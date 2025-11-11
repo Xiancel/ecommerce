@@ -1051,7 +1051,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/order.CreateOrderRequset"
+                            "$ref": "#/definitions/order.CreateOrderRequest"
                         }
                     }
                 ],
@@ -1463,7 +1463,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.UpdateUserRequest"
+                            "$ref": "#/definitions/user.UpdateOwnUserRequest"
                         }
                     }
                 ],
@@ -1676,29 +1676,6 @@ const docTemplate = `{
                 }
             }
         },
-        "models.OrderItem": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "order_id": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "product_id": {
-                    "type": "string"
-                },
-                "quantity": {
-                    "type": "integer"
-                }
-            }
-        },
         "models.Product": {
             "type": "object",
             "properties": {
@@ -1777,19 +1754,34 @@ const docTemplate = `{
                 }
             }
         },
-        "order.CreateOrderRequset": {
+        "order.CreateOrderItemRequest": {
+            "type": "object",
+            "required": [
+                "product_id",
+                "quantity"
+            ],
+            "properties": {
+                "product_id": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "order.CreateOrderRequest": {
             "type": "object",
             "required": [
                 "items",
                 "payment_method",
-                "shipping_adress",
-                "user_id"
+                "shipping_address"
             ],
             "properties": {
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.OrderItem"
+                        "$ref": "#/definitions/order.CreateOrderItemRequest"
                     }
                 },
                 "payment_method": {
@@ -1799,11 +1791,8 @@ const docTemplate = `{
                         "cash"
                     ]
                 },
-                "shipping_adress": {
+                "shipping_address": {
                     "$ref": "#/definitions/models.ShippingAddress"
-                },
-                "user_id": {
-                    "type": "string"
                 }
             }
         },
@@ -1918,6 +1907,29 @@ const docTemplate = `{
                 }
             }
         },
+        "user.UpdateOwnUserRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "last_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 6
+                }
+            }
+        },
         "user.UpdateUserRequest": {
             "type": "object",
             "properties": {
@@ -1989,7 +2001,6 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "API для e-commerce платформи з управлінням продуктами, кошиком та замовленнями",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
-
 }
 
 func init() {

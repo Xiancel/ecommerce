@@ -8,7 +8,7 @@ import (
 )
 
 type OrderService interface {
-	CreateOrder(ctx context.Context, req CreateOrderRequset) (*models.Order, error)
+	CreateOrder(ctx context.Context, userID uuid.UUID, req CreateOrderRequest) (*models.Order, error)
 	GetOrder(ctx context.Context, id uuid.UUID) (*models.Order, error)
 	ListOrder(ctx context.Context, filter OrderFilter) (*OrderListResponse, error)
 	UpdateOrderStatus(ctx context.Context, id uuid.UUID, req UpdateOrderRequest) (*models.Order, error)

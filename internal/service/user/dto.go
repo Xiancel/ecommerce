@@ -9,6 +9,12 @@ type UpdateUserRequest struct {
 	LastName  *string `json:"last_name" validate:"omitempty,min=2,max=100"`
 	Role      *string `json:"role" validate:"omitempty,oneof=user admin"`
 }
+type UpdateOwnUserRequest struct {
+	Email     *string `json:"email" validate:"omitempty,email"`
+	Password  *string `json:"password" validate:"omitempty,min=6,max=100"`
+	FirstName *string `json:"first_name" validate:"omitempty,min=2,max=100"`
+	LastName  *string `json:"last_name" validate:"omitempty,min=2,max=100"`
+}
 
 type UserFilter struct {
 	Search  string  `json:"search"`

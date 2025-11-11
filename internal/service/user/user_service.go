@@ -8,6 +8,7 @@ import (
 	models "github.com/Xiancel/ecommerce/internal/domain"
 	repository "github.com/Xiancel/ecommerce/internal/repository/postgres"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type service struct {
@@ -82,7 +83,7 @@ func (s *service) ListUser(ctx context.Context, filter UserFilter) (*UserListRes
 }
 
 // UpdateUser implements UserService.
-func (s *service) UpdateUser(ctx context.Context, id uuid.UUID, req UpdateUserRequest) (*models.User, error) {
+func (s *service) UpdateUser(ctx context.Context, id uuid.UUID, req UpdateUserRequest, isAdmin bool) (*models.User, error) {
 	user, err := s.userRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, ErrUserNotFound
@@ -102,9 +103,13 @@ func (s *service) UpdateUser(ctx context.Context, id uuid.UUID, req UpdateUserRe
 		user.LastName = *req.LastName
 	}
 	if req.Password != nil {
-		user.PasswordHash = *req.Password
+		hash, err := bcrypt.GenerateFromPassword([]byte(*req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, fmt.Errorf("failed to hash password: %w", err)
+		}
+		user.PasswordHash = string(hash)
 	}
-	if req.Role != nil {
+	if req.Role != nil && isAdmin {
 		user.Role = *req.Role
 	}
 

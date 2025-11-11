@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -98,7 +99,7 @@ func (s *service) Register(ctx context.Context, req RegisterRequest) (*AuthRespo
 	}
 
 	existUser, err := s.userRepo.GetByEmail(ctx, req.Email)
-	if err != nil {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("failed to check existing user: %w", err)
 	}
 	if existUser != nil {
