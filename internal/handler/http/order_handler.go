@@ -169,7 +169,6 @@ func (h *OrderHandler) ListOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	orders, err := h.OrderSrv.ListOrder(r.Context(), filter)
 	if err != nil {
-		fmt.Printf("Handler lvl error :%w", err)
 		handlerOrderError(w, err)
 		return
 	}
