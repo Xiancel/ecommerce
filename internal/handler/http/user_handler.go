@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/Xiancel/ecommerce/internal/service/user"
 	userSrv "github.com/Xiancel/ecommerce/internal/service/user"
 	"github.com/go-chi/chi/v5"
 )
@@ -77,7 +76,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-	updReq := user.UpdateUserRequest{
+	updReq := userSrv.UpdateUserRequest{
 		Email:     req.Email,
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
