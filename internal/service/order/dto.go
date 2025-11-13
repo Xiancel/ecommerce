@@ -5,6 +5,8 @@ import (
 	"github.com/google/uuid"
 )
 
+// DTO структури для замовленнь
+
 type CreateOrderItemRequest struct {
 	ProductID uuid.UUID `json:"product_id" validate:"required"`
 	Quantity  int       `json:"quantity" validate:"required,min=1"`

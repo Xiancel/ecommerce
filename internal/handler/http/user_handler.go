@@ -37,11 +37,13 @@ func (h *UserHandler) RegisterRoutes(r chi.Router) {
 // @Security BearerAuth
 // @Router /users [get]
 func (h *UserHandler) ListUser(w http.ResponseWriter, r *http.Request) {
+	// отримання ID користувача з контексту
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
 		respondError(w, http.StatusUnauthorized, "User not authorized")
 		return
 	}
+	// отримання данних про користувача
 	user, err := h.UserSrv.GetUser(r.Context(), userID)
 	if err != nil {
 		handlerServiceUserError(w, err)
@@ -66,16 +68,20 @@ func (h *UserHandler) ListUser(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /users [put]
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	// отримання ID користувача з контексту
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
 		respondError(w, http.StatusUnauthorized, "User not authorized")
 		return
 	}
+
+	// отримання данних з request для оновлення
 	var req userSrv.UpdateOwnUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+
 	updReq := userSrv.UpdateUserRequest{
 		Email:     req.Email,
 		FirstName: req.FirstName,
@@ -83,6 +89,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		Password:  req.Password,
 		Role:      nil,
 	}
+	// оновлення данних користувача
 	updUser, err := h.UserSrv.UpdateUser(r.Context(), userID, updReq, false)
 	if err != nil {
 		handlerServiceUserError(w, err)
@@ -91,6 +98,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, updUser)
 }
 
+// handlerServiceUserError повертає помилки
 func handlerServiceUserError(w http.ResponseWriter, err error) {
 	switch err {
 	case userSrv.ErrUserNotFound:

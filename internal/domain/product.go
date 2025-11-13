@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// структура Продуктів
 type Product struct {
 	ID          uuid.UUID  `db:"id" json:"id"`
 	Name        string     `db:"name" json:"name"`
@@ -18,6 +19,7 @@ type Product struct {
 	UpdatedAt   time.Time  `db:"updated_at" json:"updated_at"`
 }
 
+// структура для фільтрації продіктів
 type ListFilter struct {
 	CategoryID *uuid.UUID
 	MinPrice   *float64

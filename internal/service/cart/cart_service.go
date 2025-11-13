@@ -17,8 +17,9 @@ func NewService(cartRepo repository.CartRepository) CartService {
 	return &service{CartRepo: cartRepo}
 }
 
-// AddItem implements CartService.
+// AddItem додавання товару в кошик
 func (s *service) AddItem(ctx context.Context, userID uuid.UUID, req AddCartItemRequest) (*models.CartItem, error) {
+	// валідація
 	if req.ProductID == uuid.Nil {
 		return nil, ErrProductNotFound
 	}
@@ -26,11 +27,14 @@ func (s *service) AddItem(ctx context.Context, userID uuid.UUID, req AddCartItem
 		return nil, ErrEmptyQuantity
 	}
 
+	// отримання товарів
 	existItem, err := s.CartRepo.GetItem(ctx, userID, req.ProductID)
 	if err != nil {
 		return nil, fmt.Errorf("failed get item: %w", err)
 	}
+	// перевірка на існування товару в кошику
 	if existItem != nil {
+		// якщо вже такий товар існює оновлюємо кількість
 		quant := existItem.Quantity + req.Quantity
 		if err := s.CartRepo.UpdateQuantity(ctx, existItem.ID, quant); err != nil {
 			return nil, fmt.Errorf("failed to update item quantity: %w", err)
@@ -39,13 +43,13 @@ func (s *service) AddItem(ctx context.Context, userID uuid.UUID, req AddCartItem
 		return existItem, nil
 	}
 
+	// додавання товару в кошик
 	item := &models.CartItem{
 		ID:        uuid.New(),
 		UserID:    userID,
 		ProductID: req.ProductID,
 		Quantity:  req.Quantity,
 	}
-
 	if err := s.CartRepo.AddItem(ctx, item); err != nil {
 		return nil, fmt.Errorf("failed to add item: %w", err)
 	}
@@ -53,20 +57,23 @@ func (s *service) AddItem(ctx context.Context, userID uuid.UUID, req AddCartItem
 	return item, nil
 }
 
-// ClearItem implements CartService.
+// ClearItem очищення кошику
 func (s *service) ClearItem(ctx context.Context, userID uuid.UUID) error {
+	// валідація
 	if userID == uuid.Nil {
 		return ErrUserIDRequired
 	}
 
+	// очищення кошика
 	if err := s.CartRepo.Clear(ctx, userID); err != nil {
 		return fmt.Errorf("failed to clear item: %w", err)
 	}
 	return nil
 }
 
-// DeleteItem implements CartService.
+// DeleteItem видалення товару з кошика
 func (s *service) DeleteItem(ctx context.Context, userID uuid.UUID, itemID uuid.UUID) error {
+	// ввалідація
 	if userID == uuid.Nil {
 		return ErrUserIDRequired
 	}
@@ -74,7 +81,9 @@ func (s *service) DeleteItem(ctx context.Context, userID uuid.UUID, itemID uuid.
 		return ErrItemIDRequired
 	}
 
+	// отримання товару за його ID
 	existItem, err := s.CartRepo.GetItemByID(ctx, userID, itemID)
+	// обробка помилок
 	if err != nil {
 		return fmt.Errorf("failed get item: %w", err)
 	}
@@ -82,24 +91,28 @@ func (s *service) DeleteItem(ctx context.Context, userID uuid.UUID, itemID uuid.
 		return ErrProductNotFound
 	}
 
+	// видалення товару з кошика
 	if err := s.CartRepo.RemoveItem(ctx, userID, itemID); err != nil {
 		return fmt.Errorf("failed to delete item: %w", err)
 	}
 	return nil
 }
 
-// ListItem implements CartService.
+// ListItem повененя списку товару у кошику
 func (s *service) ListItem(ctx context.Context, userID uuid.UUID) (*CartListResponse, error) {
+	// отримання товарів у кошику за ID користувача
 	items, err := s.CartRepo.GetByUserId(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cart item: %w", err)
 	}
 
+	// створення відповіді для корзини
 	resp := &CartListResponse{
 		Items:      []*models.CartItem{},
 		TotalPrice: 0,
 	}
 
+	// додаванння товарів у список
 	for _, item := range items {
 		cartItem := &models.CartItem{
 			ID:        item.ID,
@@ -114,8 +127,9 @@ func (s *service) ListItem(ctx context.Context, userID uuid.UUID) (*CartListResp
 	return resp, nil
 }
 
-// UpdateItem implements CartService.
+// UpdateItem оновлення товару в кошику
 func (s *service) UpdateItem(ctx context.Context, userID uuid.UUID, itemID uuid.UUID, req UpdateCartItemRequest) (*models.CartItem, error) {
+	// валідація
 	if userID == uuid.Nil {
 		return nil, ErrUserIDRequired
 	}
@@ -126,7 +140,9 @@ func (s *service) UpdateItem(ctx context.Context, userID uuid.UUID, itemID uuid.
 		return nil, ErrEmptyQuantity
 	}
 
+	// получення товару
 	existItem, err := s.CartRepo.GetItem(ctx, userID, itemID)
+	// обробка помилок
 	if err != nil {
 		return nil, fmt.Errorf("failed get item: %w", err)
 	}
@@ -134,11 +150,13 @@ func (s *service) UpdateItem(ctx context.Context, userID uuid.UUID, itemID uuid.
 		return nil, ErrProductNotFound
 	}
 
+	// валідація
 	if req.ProductID != nil {
 		existItem.ProductID = *req.ProductID
 	}
 	existItem.Quantity = req.Quantity
 
+	// оновлення кількость товару і корзині
 	if err := s.CartRepo.UpdateQuantity(ctx, existItem.ID, existItem.Quantity); err != nil {
 		return nil, fmt.Errorf("failed to update quantity: %w", err)
 	}

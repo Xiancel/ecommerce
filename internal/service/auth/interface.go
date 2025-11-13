@@ -2,6 +2,7 @@ package auth
 
 import "context"
 
+// AuthService Інтерфейс для роботи з Антефікацією та авторизацією
 type AuthService interface {
 	Register(ctx context.Context, req RegisterRequest) (*AuthResponse, error)
 	Login(ctx context.Context, req LoginRequset) (*AuthResponse, error)

@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// CartService для роботи з кошиком
 type CartService interface {
 	AddItem(ctx context.Context, userID uuid.UUID, req AddCartItemRequest) (*models.CartItem, error)
 	UpdateItem(ctx context.Context, userID, itemID uuid.UUID, req UpdateCartItemRequest) (*models.CartItem, error)

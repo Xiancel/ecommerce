@@ -2,6 +2,7 @@ package order
 
 import "errors"
 
+// помилки пов'язані з замовленнями
 var (
 	//Order validate errors
 	ErrOrderIDRequired         = errors.New("order id is required")

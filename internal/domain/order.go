@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// структура замовлень користувача
 type Order struct {
 	ID              uuid.UUID       `db:"id" json:"id"`
 	UserID          *uuid.UUID      `db:"user_id" json:"user_id,omitempty"`
@@ -17,12 +18,15 @@ type Order struct {
 	UpdatedAt       time.Time       `db:"updated_at" json:"updated_at"`
 }
 
+// структура адреси для замовлень
 type ShippingAddress struct {
 	Street     string
 	City       string
 	PostalCode string
 	Country    string
 }
+
+// структура товарів у замовлені
 type OrderItem struct {
 	ID        uuid.UUID `db:"id" json:"id"`
 	OrderID   uuid.UUID `db:"order_id" json:"order_id"`

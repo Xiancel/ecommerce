@@ -5,6 +5,9 @@ import (
 	"net/http"
 )
 
+// допоміжні функції
+
+// повертає помилку
 func respondError(w http.ResponseWriter, status int, msg string) {
 	respondJSON(w, status, ErrorResponse{
 		Error:  msg,
@@ -12,11 +15,13 @@ func respondError(w http.ResponseWriter, status int, msg string) {
 	})
 }
 
+// структура помилки
 type ErrorResponse struct {
 	Error  string `json:"error"`
 	Status int    `json:"status"`
 }
 
+// вивід інформації в JSON
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

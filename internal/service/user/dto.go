@@ -2,6 +2,8 @@ package user
 
 import models "github.com/Xiancel/ecommerce/internal/domain"
 
+// DTO структурі для користувача
+
 type UpdateUserRequest struct {
 	Email     *string `json:"email" validate:"omitempty,email"`
 	Password  *string `json:"password" validate:"omitempty,min=6,max=100"`

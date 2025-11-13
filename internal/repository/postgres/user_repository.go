@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// UserRepository інтерфейс для роботи з користувачами
 type UserRepository interface {
 	Create(ctx context.Context, user *models.User) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.User, error)
@@ -26,17 +27,20 @@ func NewUserRepository(db *database.DB) UserRepository {
 	return &UserRepo{db: db}
 }
 
-// Create implements UserRepository.
+// Create створює нового користувача
 func (u *UserRepo) Create(ctx context.Context, user *models.User) error {
+	// перевірка ID на пусте значення і приствоєння нового ID
 	if user.ID == uuid.Nil {
 		user.ID = uuid.New()
 	}
 
+	// квери запит
 	query := `
 	INSERT INTO users (id, email,password_hash, first_name, last_name, role, created_at, updated_at)
 	VALUES ($1,$2,$3,$4,$5,$6,NOW(),NOW())
 	`
 
+	// создання нового користувача
 	_, err := u.db.ExecContext(ctx, query,
 		user.ID,
 		user.Email,
@@ -46,22 +50,26 @@ func (u *UserRepo) Create(ctx context.Context, user *models.User) error {
 		user.Role,
 	)
 
+	// обробка помилки
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
 	}
 	return nil
 }
 
-// Delete implements UserRepository.
+// Delete видаляє користувача за його ID
 func (u *UserRepo) Delete(ctx context.Context, id uuid.UUID) error {
+	// квери запит
 	query := `
 	DELETE FROM users WHERE id = $1
 	`
 
+	// видалення користувача
 	res, err := u.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete users: %w", err)
 	}
+	// перевірка користувача на існування
 	rows, _ := res.RowsAffected()
 	if rows == 0 {
 		return fmt.Errorf("users not found")
@@ -70,15 +78,17 @@ func (u *UserRepo) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-// GetByEmail implements UserRepository.
+// GetByEmail повертає користувача за його email
 func (u *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
+	// квери запит
 	query := `
 	SELECT id, email,password_hash, first_name, last_name, role, created_at, updated_at
 	FROM users
 	WHERE email = $1
 	`
 
+	// получення користувача
 	err := u.db.GetContext(ctx, &user, query, email)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users by email: %w", err)
@@ -87,15 +97,17 @@ func (u *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 	return &user, nil
 }
 
-// GetByID implements UserRepository.
+// GetByID повертає користувача за його ID
 func (u *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	var user models.User
+	// квери запит
 	query := `
 	SELECT id, email,password_hash, first_name, last_name, role, created_at, updated_at
 	FROM users
 	WHERE id = $1
 	`
 
+	// получення користувача
 	err := u.db.GetContext(ctx, &user, query, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users by id: %w", err)
@@ -104,8 +116,9 @@ func (u *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 	return &user, nil
 }
 
-// List implements UserRepository.
+// List повертає список користувачів 
 func (u *UserRepo) List(ctx context.Context, limit int, offset int) ([]*models.User, error) {
+	// квери запит
 	query := `
 	SELECT id, email,password_hash, first_name, last_name, role, created_at, updated_at
 	FROM users
@@ -113,6 +126,7 @@ func (u *UserRepo) List(ctx context.Context, limit int, offset int) ([]*models.U
 	LIMIT $1 OFFSET $2
 	`
 
+	// відображення користувачів
 	var users []*models.User
 	err := u.db.SelectContext(ctx, &users, query, limit, offset)
 	if err != nil {
@@ -122,8 +136,9 @@ func (u *UserRepo) List(ctx context.Context, limit int, offset int) ([]*models.U
 	return users, nil
 }
 
-// Update implements UserRepository.
+// Update оновлює дані користувача
 func (u *UserRepo) Update(ctx context.Context, user *models.User) error {
+	// квері запит
 	query := `
 	UPDATE users
 	SET email = $1,
@@ -134,6 +149,7 @@ func (u *UserRepo) Update(ctx context.Context, user *models.User) error {
 		updated_at = NOW()
 	WHERE id = $6	
 	`
+	// оновлення користувача
 	res, err := u.db.ExecContext(ctx, query,
 		user.Email,
 		user.PasswordHash,
@@ -142,6 +158,7 @@ func (u *UserRepo) Update(ctx context.Context, user *models.User) error {
 		user.Role,
 		user.ID,
 	)
+	// обробка помилок
 	if err != nil {
 		return fmt.Errorf("failed to update user: %w", err)
 	}

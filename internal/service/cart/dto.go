@@ -5,6 +5,8 @@ import (
 	"github.com/google/uuid"
 )
 
+// DTO структури для кошика
+
 type AddCartItemRequest struct {
 	ProductID uuid.UUID `json:"product_id" validate:"required,uuid"`
 	Quantity  int       `json:"quantity" validate:"required,gt=0"`

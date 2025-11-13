@@ -37,11 +37,14 @@ func (h *AuthHandler) RegisterRoutes(r chi.Router) {
 // @Failure 500 {object} http.ErrorResponse "Internal server error"
 // @Router /auth/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	// отримання данних з request
 	var req authSrv.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+
+	// реєстрація користувача
 	resp, err := h.AuthSrv.Register(r.Context(), req)
 	if err != nil {
 		handlerAuthError(w, err)
@@ -63,11 +66,13 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} http.ErrorResponse "Internal server error"
 // @Router /auth/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	// отримання данних з request
 	var req authSrv.LoginRequset
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+	// антефікація користувача
 	resp, err := h.AuthSrv.Login(r.Context(), req)
 	if err != nil {
 		handlerAuthError(w, err)
@@ -89,12 +94,14 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} http.ErrorResponse "Internal server error"
 // @Router /auth/refresh [post]
 func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	// отримання данних з request
 	var req authSrv.RefreshRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
+	// оновлення токену
 	resp, err := h.AuthSrv.RefreshToken(r.Context(), req.RefreshToken)
 	if err != nil {
 		handlerAuthError(w, err)

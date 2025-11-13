@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// ProductRepository інтерфейс для роботи з продуктами
 type ProductRepository interface {
 	Create(ctx context.Context, product *models.Product) error
 	GetById(ctx context.Context, id uuid.UUID) (*models.Product, error)
@@ -27,13 +28,16 @@ func NewProductRepository(db *database.DB) ProductRepository {
 	return &productRepo{db: db}
 }
 
-// Create implements ProductRepository.
+// Create створює новий продукт
 func (p *productRepo) Create(ctx context.Context, product *models.Product) error {
 	query := `
 	INSERT INTO products (id, name, description, price, stock, category_id, image_url, created_at, updated_at)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
 	`
+
+	// присвоєння айді продукту
 	product.ID = uuid.New()
+	// створення продукту
 	_, err := p.db.ExecContext(ctx, query,
 		product.ID,
 		product.Name,
@@ -43,6 +47,7 @@ func (p *productRepo) Create(ctx context.Context, product *models.Product) error
 		product.CategoryID,
 		product.ImageURL,
 	)
+	// обробка помилки
 	if err != nil {
 		return fmt.Errorf("failed to created product: %w", err)
 	}
@@ -50,13 +55,14 @@ func (p *productRepo) Create(ctx context.Context, product *models.Product) error
 	return nil
 }
 
-// Delete implements ProductRepository.
+// Delete видаляє продукт
 func (p *productRepo) Delete(ctx context.Context, id uuid.UUID) error {
 	query := `
 	DELETE FROM products WHERE id = $1
 	`
-
+	// видалення продукту за його ID
 	res, err := p.db.ExecContext(ctx, query, id)
+	// обробка помилок
 	if err != nil {
 		return fmt.Errorf("failed to delete product: %w", err)
 	}
@@ -67,7 +73,7 @@ func (p *productRepo) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-// GetById implements ProductRepository.
+// GetById повертає продукт за його ID
 func (p *productRepo) GetById(ctx context.Context, id uuid.UUID) (*models.Product, error) {
 	var product models.Product
 	query := `
@@ -76,7 +82,9 @@ func (p *productRepo) GetById(ctx context.Context, id uuid.UUID) (*models.Produc
 	WHERE id = $1
 	`
 
+	// передання інформації про продукт за його ID
 	err := p.db.GetContext(ctx, &product, query, id)
+	// обробка помилок
 	if err != nil {
 		return nil, fmt.Errorf("failed to get product: %w", err)
 	}
@@ -84,7 +92,7 @@ func (p *productRepo) GetById(ctx context.Context, id uuid.UUID) (*models.Produc
 	return &product, nil
 }
 
-// List implements ProductRepository.
+// List повертає список продуктів
 func (p *productRepo) List(ctx context.Context, filter models.ListFilter) ([]*models.Product, error) {
 	query := `
 	SELECT id, name, description, price, stock, category_id, image_url, created_at, updated_at
@@ -95,6 +103,7 @@ func (p *productRepo) List(ctx context.Context, filter models.ListFilter) ([]*mo
 	args := []interface{}{}
 	argsCount := 1
 
+	// фільтрація
 	if filter.CategoryID != nil && *filter.CategoryID != uuid.Nil {
 		query += fmt.Sprintf(" AND category_id = $%d", argsCount)
 		args = append(args, *filter.CategoryID)
@@ -147,6 +156,7 @@ func (p *productRepo) List(ctx context.Context, filter models.ListFilter) ([]*mo
 		argsCount++
 	}
 
+	// отримання продуктів
 	var products []*models.Product
 	err := p.db.SelectContext(ctx, &products, query, args...)
 	if err != nil {
@@ -155,7 +165,7 @@ func (p *productRepo) List(ctx context.Context, filter models.ListFilter) ([]*mo
 	return products, nil
 }
 
-// Update implements ProductRepository.
+// Update оновлення продукту
 func (p *productRepo) Update(ctx context.Context, product *models.Product) error {
 	query := `
 	UPDATE products 
@@ -169,6 +179,7 @@ func (p *productRepo) Update(ctx context.Context, product *models.Product) error
 	WHERE id = $7
 	`
 
+	// оновлення даних продукта
 	res, err := p.db.ExecContext(ctx, query,
 		product.Name,
 		product.Description,
@@ -178,6 +189,7 @@ func (p *productRepo) Update(ctx context.Context, product *models.Product) error
 		product.ImageURL,
 		product.ID,
 	)
+	// обробка помилок
 	if err != nil {
 		return fmt.Errorf("failed to update product: %w", err)
 	}
@@ -188,7 +200,7 @@ func (p *productRepo) Update(ctx context.Context, product *models.Product) error
 	return nil
 }
 
-// UpdateStock implements ProductRepository.
+// UpdateStock оновлення количества продукту
 func (p *productRepo) UpdateStock(ctx context.Context, id uuid.UUID, quantity int) error {
 	query := `
 	UPDATE products
@@ -196,8 +208,9 @@ func (p *productRepo) UpdateStock(ctx context.Context, id uuid.UUID, quantity in
 		updated_at = NOW()
 	WHERE id = $2
 	`
-
+	// оновлення количество продукта по ID
 	res, err := p.db.ExecContext(ctx, query, quantity, id)
+	// обробка помилок
 	if err != nil {
 		return fmt.Errorf("failed to update stock: %w", err)
 	}

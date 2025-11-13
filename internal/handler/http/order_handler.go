@@ -42,6 +42,7 @@ func (h *OrderHandler) RegisterRoutes(r chi.Router) {
 // @Security BearerAuth
 // @Router /orders/{id} [get]
 func (h *OrderHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
+	// отримання ID з url параметрів
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -49,6 +50,7 @@ func (h *OrderHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// отримання заказу по його ID
 	order, err := h.OrderSrv.GetOrder(r.Context(), id)
 	if err != nil {
 		handlerOrderError(w, err)
@@ -71,18 +73,21 @@ func (h *OrderHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /orders [post]
 func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
+	// отримання ID користувача з контексту
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
 		respondError(w, http.StatusUnauthorized, "User not authorized")
 		return
 	}
 
+	// отримання данних для створення заказу
 	var req orderSrv.CreateOrderRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
+	// створення заказу
 	order, err := h.OrderSrv.CreateOrder(r.Context(), userID, req)
 	if err != nil {
 		fmt.Printf("handler lvl CreateOrder error: %+v\n", err)
@@ -106,12 +111,15 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /orders/{id}/cancel [put]
 func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {
+	// отримання ID з url параметрів
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "InvalidID")
 		return
 	}
+
+	// скасування замовлення
 	if err := h.OrderSrv.CancelOrder(r.Context(), id); err != nil {
 		handlerOrderError(w, err)
 		return
@@ -137,18 +145,21 @@ func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /orders [get]
 func (h *OrderHandler) ListOrder(w http.ResponseWriter, r *http.Request) {
+	// отримання ID користувача з контексту
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
 		respondError(w, http.StatusUnauthorized, "User not authorized")
 		return
 	}
 
+	// встановлення фільтрів за замовчуванням
 	filter := orderSrv.OrderFilter{
 		UserID: &userID,
 		Limit:  20,
 		Offset: 0,
 	}
 
+	// фільтрація
 	filter.Status = r.URL.Query().Get("status")
 
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
@@ -167,6 +178,8 @@ func (h *OrderHandler) ListOrder(w http.ResponseWriter, r *http.Request) {
 		}
 		filter.Offset = offset
 	}
+
+	// вивід списку замовлень користувача
 	orders, err := h.OrderSrv.ListOrder(r.Context(), filter)
 	if err != nil {
 		handlerOrderError(w, err)

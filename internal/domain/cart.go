@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// структура кошика користувача
 type CartItem struct {
 	ID        uuid.UUID `db:"id" json:"id"`
 	UserID    uuid.UUID `db:"user_id" json:"user_id,omitempty"`
@@ -14,6 +15,7 @@ type CartItem struct {
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 }
 
+// структура товарів у кошику
 type CartItemWithProduct struct {
 	CartItem
 	ProductName  string  `db:"product_name" json:"product_name"`

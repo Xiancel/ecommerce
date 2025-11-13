@@ -31,9 +31,12 @@ import (
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token.
 func main() {
+	// завантаження .env файлів
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment varibles")
 	}
+
+	// отримання конфігурації з env
 	dbHost := getEnv("DB_HOST", "db")
 	dbPort := getEnv("DB_PORT", "5432")
 	dbUser := getEnv("DB_USER", "user")
@@ -43,6 +46,7 @@ func main() {
 	serverPort := getEnv("APP_PORT", "8080")
 	jwtSecret := getEnv("JWT_SECRET", "kfJ+JpWThVtZ5p0hIM9s7jFGucNvHdn59aTfzT7fQ2iqlt3rH2bnSKTwsm4B3Q3P")
 
+	// конфігурація бази данних
 	dbConfig := db.Config{
 		Host:     dbHost,
 		Port:     dbPort,
@@ -52,6 +56,7 @@ func main() {
 		SSLMode:  dbSSLMode,
 	}
 
+	// ініціалізація бази данних
 	database, err := db.NewDB(dbConfig)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
@@ -60,6 +65,7 @@ func main() {
 
 	log.Println("✅ Database connetion established")
 
+	// ініціалізація репозеторіїв
 	productRepo := postgres.NewProductRepository(database)
 	userRepo := postgres.NewUserRepository(database)
 	cartRepo := postgres.NewCartRepository(database)
@@ -67,6 +73,7 @@ func main() {
 
 	log.Println("✅ Repository initialized")
 
+	// ініціалізація сервісів
 	productSrv := productService.NewService(productRepo)
 	userSrv := userService.NewService(userRepo)
 	authSrv := authService.NewService(userRepo, jwtSecret)
@@ -75,6 +82,7 @@ func main() {
 
 	log.Println("✅ Services initialized")
 
+	// ініціалізація http router
 	router := httpHandler.NewRouter(httpHandler.RouterConfig{
 		AuthService:    authSrv,
 		ProductService: productSrv,
@@ -85,6 +93,7 @@ func main() {
 
 	log.Println("✅ HTTP router initialized")
 
+	// створення HTTP серверу
 	server := &http.Server{
 		Addr:         ":" + serverPort,
 		Handler:      router,
@@ -93,6 +102,7 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
+	// запуск сервера в горутинах
 	go func() {
 		log.Printf("🚀 Server starting on http://localhost:%s", serverPort)
 		log.Printf("📚 API documentation: http://localhost:%s/api/v1", serverPort)
@@ -102,6 +112,7 @@ func main() {
 		}
 	}()
 
+	// повернення повідомлень
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit

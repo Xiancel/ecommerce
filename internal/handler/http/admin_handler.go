@@ -58,12 +58,14 @@ func (h *AdminHandler) RegisterRoutes(r chi.Router) {
 // @Security BearerAuth
 // @Router /admin/products [post]
 func (h *AdminHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
+	// отримання данних з request
 	var req productSrv.CreateProductRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
+	// створення нового продукта
 	createProd, err := h.productSrv.CreateProduct(r.Context(), req)
 	if err != nil {
 		handlerServiceProductError(w, err)
@@ -88,6 +90,7 @@ func (h *AdminHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /admin/products/{id} [put]
 func (h *AdminHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
+	// отримання ID з url параметру
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -95,11 +98,14 @@ func (h *AdminHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// отримання данних з request
 	var req productSrv.UpdateProductRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+
+	// оновлення продукта
 	updProd, err := h.productSrv.UpdateProduct(r.Context(), id, req)
 	if err != nil {
 		handlerServiceProductError(w, err)
@@ -125,10 +131,12 @@ func (h *AdminHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /admin/orders [get]
 func (h *AdminHandler) ListAllOrder(w http.ResponseWriter, r *http.Request) {
+	// встановлення фільтрів за замовчуванням
 	filter := orderSrv.OrderFilter{
 		Limit:  20,
 		Offset: 0,
 	}
+	// фільтрація
 	filter.Status = r.URL.Query().Get("status")
 
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
@@ -147,6 +155,7 @@ func (h *AdminHandler) ListAllOrder(w http.ResponseWriter, r *http.Request) {
 		filter.Offset = offset
 	}
 
+	// отримання списку замовлень
 	orders, err := h.orderSrv.ListOrder(r.Context(), filter)
 	if err != nil {
 		handlerOrderError(w, err)
@@ -170,17 +179,21 @@ func (h *AdminHandler) ListAllOrder(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /admin/orders/{id}/status [put]
 func (h *AdminHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
+	// отримання ID з url параментра
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "InvalidID")
 		return
 	}
+	// отримання данних з request
 	var req orderSrv.UpdateOrderRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+
+	// оновлення статусу замовлення
 	updOrders, err := h.orderSrv.UpdateOrderStatus(r.Context(), id, req)
 	if err != nil {
 		handlerOrderError(w, err)
@@ -205,6 +218,7 @@ func (h *AdminHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request)
 // @Security BearerAuth
 // @Router /admin/users/{id} [get]
 func (h *AdminHandler) GetUser(w http.ResponseWriter, r *http.Request) {
+	// отримання ID користувача з url параметру
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -212,6 +226,7 @@ func (h *AdminHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// отримання інформації про користувача за його ID
 	user, err := h.userSrv.GetUser(r.Context(), id)
 	if err != nil {
 		handlerServiceUserError(w, err)
@@ -236,10 +251,13 @@ func (h *AdminHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /admin/users [get]
 func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
+	// встановлення фільтрів за замовчуванням
 	filter := userSrv.UserFilter{
 		Limit:  20,
 		Offset: 0,
 	}
+
+	// фільтрація
 	filter.Search = r.URL.Query().Get("search")
 
 	if role := r.URL.Query().Get("role"); role != "" {
@@ -262,6 +280,7 @@ func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 		filter.Offset = offset
 	}
 
+	// отримання списку всіх користувачів
 	response, err := h.userSrv.ListUser(r.Context(), filter)
 	if err != nil {
 		handlerServiceUserError(w, err)
@@ -283,12 +302,15 @@ func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /admin/users/{id} [delete]
 func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	// отримання ID користувача з url параметру
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid user ID")
 		return
 	}
+
+	// видалення користувача
 	if err := h.userSrv.DeleteUser(r.Context(), id); err != nil {
 		handlerServiceUserError(w, err)
 		return
@@ -313,18 +335,21 @@ func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /admin/users/{id} [put]
 func (h *AdminHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	// отримання ID користувача з url параметру
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid user ID")
 		return
 	}
+	// отримання данних з request
 	var req userSrv.UpdateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-	updUser, err := h.userSrv.UpdateUser(r.Context(), id, req,true)
+	// оновлення данних користувача
+	updUser, err := h.userSrv.UpdateUser(r.Context(), id, req, true)
 	if err != nil {
 		handlerServiceUserError(w, err)
 		return

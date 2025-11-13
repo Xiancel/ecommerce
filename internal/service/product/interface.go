@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// ProductService інтерфейс для роботи з продуктами
 type ProductService interface {
 	CreateProduct(ctx context.Context, req CreateProductRequest) (*models.Product, error)
 	GetProduct(ctx context.Context, id uuid.UUID) (*models.Product, error)

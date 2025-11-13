@@ -9,6 +9,9 @@ import (
 	"github.com/google/uuid"
 )
 
+// DTO структури для антефікації і авторизації 
+
+
 type RegisterRequest struct {
 	Email     string `json:"email" validate:"required,email"`
 	Password  string `json:"password" validate:"required,min=8"`

@@ -2,6 +2,7 @@ package cart
 
 import "errors"
 
+// помилки пов'язані з кошиком
 var (
 	//Validate errors
 	ErrUserIDRequired    = errors.New("user id is required")

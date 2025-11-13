@@ -17,11 +17,13 @@ func NewService(productRepo repository.ProductRepository) ProductService {
 	return &service{productRepo: productRepo}
 }
 
-// CheckAvailability implements ProductService.
+// CheckAvailability перевірка наявність товару
 func (s *service) CheckAvailability(ctx context.Context, id uuid.UUID, quantity int) (bool, error) {
+	// валідація
 	if quantity == 0 {
 		return false, ErrInvalidQuantity
 	}
+	// получення товару за його ID
 	product, err := s.productRepo.GetById(ctx, id)
 	if err != nil {
 		return false, nil
@@ -29,8 +31,9 @@ func (s *service) CheckAvailability(ctx context.Context, id uuid.UUID, quantity 
 	return product.Stock >= quantity, nil
 }
 
-// CreateProduct implements ProductService.
+// CreateProduct створення товару
 func (s *service) CreateProduct(ctx context.Context, req CreateProductRequest) (*models.Product, error) {
+	// валідація
 	if req.Name == "" {
 		return nil, ErrProductNameRequired
 	}
@@ -53,6 +56,7 @@ func (s *service) CreateProduct(ctx context.Context, req CreateProductRequest) (
 		imageURL = &req.ImageURL
 	}
 
+	// створення товару
 	product := &models.Product{
 		Name:        req.Name,
 		Description: description,
@@ -69,8 +73,9 @@ func (s *service) CreateProduct(ctx context.Context, req CreateProductRequest) (
 	return product, nil
 }
 
-// GetProduct implements ProductService.
+// GetProduct получення продукта
 func (s *service) GetProduct(ctx context.Context, id uuid.UUID) (*models.Product, error) {
+	// перевірає продукт на уснування
 	product, err := s.productRepo.GetById(ctx, id)
 	if err != nil {
 		return nil, ErrProductNotFound
@@ -79,8 +84,9 @@ func (s *service) GetProduct(ctx context.Context, id uuid.UUID) (*models.Product
 	return product, nil
 }
 
-// ListProduct implements ProductService.
+// ListProduct повернення списку товарів
 func (s *service) ListProduct(ctx context.Context, filter ProductFilter) (*ProductListResponse, error) {
+	// пагінація
 	if filter.Limit <= 0 {
 		filter.Limit = 20
 	}
@@ -90,6 +96,7 @@ func (s *service) ListProduct(ctx context.Context, filter ProductFilter) (*Produ
 	if filter.Offset < 0 {
 		filter.Offset = 0
 	}
+	// валідація
 	if filter.MinPrice != nil && *filter.MinPrice < 0 {
 		return nil, ErrInvalidPrice
 	}
@@ -98,6 +105,7 @@ func (s *service) ListProduct(ctx context.Context, filter ProductFilter) (*Produ
 		return nil, ErrInvalidPrice
 	}
 
+	// отримання списка товарів
 	repoFilter := models.ListFilter{
 		CategoryID: filter.CategoryID,
 		MinPrice:   filter.MinPrice,
@@ -112,6 +120,7 @@ func (s *service) ListProduct(ctx context.Context, filter ProductFilter) (*Produ
 	if err != nil {
 		return nil, fmt.Errorf("failed to list products: %w", err)
 	}
+	// якщо потрібні тільки продукти в наявность, фільтруємо
 	if filter.InStock != nil && *filter.InStock {
 		filteredProducts := make([]*models.Product, 0)
 		for _, p := range products {
@@ -129,8 +138,9 @@ func (s *service) ListProduct(ctx context.Context, filter ProductFilter) (*Produ
 	}, nil
 }
 
-// ReleaseStock implements ProductService.
+// ReleaseStock повернення товару на склад
 func (s *service) ReleaseStock(ctx context.Context, id uuid.UUID, quantity int) error {
+	// отримання товару за його ID
 	product, err := s.productRepo.GetById(ctx, id)
 	if err != nil {
 		return err
@@ -140,13 +150,15 @@ func (s *service) ReleaseStock(ctx context.Context, id uuid.UUID, quantity int) 
 	return s.productRepo.Update(ctx, product)
 }
 
-// ReserveStock implements ProductService.
+// ReserveStock забирання товару з склада
 func (s *service) ReserveStock(ctx context.Context, id uuid.UUID, quantity int) error {
+	// отримання товару за ID
 	product, err := s.productRepo.GetById(ctx, id)
 	if err != nil {
 		return err
 	}
 
+	// валідація
 	if product.Stock < quantity {
 		return ErrInvalidStock
 	}
@@ -156,12 +168,14 @@ func (s *service) ReserveStock(ctx context.Context, id uuid.UUID, quantity int) 
 	return s.productRepo.Update(ctx, product)
 }
 
-// SearchProduct implements ProductService.
+// SearchProduct пошук продука
 func (s *service) SearchProduct(ctx context.Context, query string, limit int, offset int) ([]*models.Product, error) {
+	// валідація
 	if query == "" {
 		return []*models.Product{}, nil
 	}
 
+	// пагінація
 	if limit <= 0 {
 		limit = 20
 	}
@@ -178,6 +192,7 @@ func (s *service) SearchProduct(ctx context.Context, query string, limit int, of
 		Offset: offset,
 	}
 
+	// повернення товарів по фільтрам пошуку
 	products, err := s.productRepo.List(ctx, filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search product: %w", err)
@@ -186,13 +201,15 @@ func (s *service) SearchProduct(ctx context.Context, query string, limit int, of
 	return products, nil
 }
 
-// UpdateProduct implements ProductService.
+// UpdateProduct оновлення товару
 func (s *service) UpdateProduct(ctx context.Context, id uuid.UUID, req UpdateProductRequest) (*models.Product, error) {
+	// получення товару за ID
 	product, err := s.productRepo.GetById(ctx, id)
 	if err != nil {
 		return nil, ErrProductNotFound
 	}
 
+	// пагінація
 	if req.Name != nil {
 		if *req.Name == "" {
 			return nil, ErrProductNameRequired
@@ -223,6 +240,7 @@ func (s *service) UpdateProduct(ctx context.Context, id uuid.UUID, req UpdatePro
 		product.ImageURL = req.ImageURL
 	}
 
+	// оновлення товару
 	if err := s.productRepo.Update(ctx, product); err != nil {
 		return nil, fmt.Errorf("failed to update product: %w", err)
 	}

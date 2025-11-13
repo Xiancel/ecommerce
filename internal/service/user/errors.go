@@ -2,6 +2,7 @@ package user
 
 import "errors"
 
+// помилки пов'язані з користувачем
 var (
 	ErrUserNotFound   = errors.New("user not found")
 	ErrUserIDRequired = errors.New("user id is required")

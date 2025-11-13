@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// OrderService інтерфейс для роботи з замовленнями
 type OrderService interface {
 	CreateOrder(ctx context.Context, userID uuid.UUID, req CreateOrderRequest) (*models.Order, error)
 	GetOrder(ctx context.Context, id uuid.UUID) (*models.Order, error)

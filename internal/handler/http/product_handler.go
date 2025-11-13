@@ -39,6 +39,7 @@ func (h *ProductHandler) RegisterRoutes(r chi.Router) {
 // @Failure 500 {object} ErrorResponse "Internal server error"
 // @Router /products/{id} [get]
 func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
+	// отримання ID з url параметру
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -46,6 +47,7 @@ func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// отримання продукту по його ID
 	product, err := h.ProductSrv.GetProduct(r.Context(), id)
 	if err != nil {
 		handlerServiceProductError(w, err)
@@ -72,10 +74,12 @@ func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} ErrorResponse "Internal server error"
 // @Router /products [get]
 func (h *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
+	// встановлення фільтрів за замовчуванням
 	filter := productSrv.ProductFilter{
 		Limit:  20,
 		Offset: 0,
 	}
+	// фільтрація
 	//categoryID
 	if categoryIDStr := r.URL.Query().Get("category_id"); categoryIDStr != "" {
 		categoryID, err := uuid.Parse(categoryIDStr)
@@ -128,6 +132,7 @@ func (h *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 		filter.Offset = offset
 	}
 
+	// отримання списку продуктів
 	response, err := h.ProductSrv.ListProduct(r.Context(), filter)
 	if err != nil {
 		handlerServiceProductError(w, err)
@@ -145,6 +150,7 @@ func (h *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} http.ErrorResponse "Internal server error"
 // @Router /categories [get]
 func (h *ProductHandler) ListCategories(w http.ResponseWriter, r *http.Request) {
+	// повернення списку категорії продуктів
 	categories := []interface{}{}
 	respondJSON(w, http.StatusOK, categories)
 }
@@ -163,12 +169,16 @@ func (h *ProductHandler) ListCategories(w http.ResponseWriter, r *http.Request) 
 // @Failure 500 {object} http.ErrorResponse "Internal server error"
 // @Router /products/search [get]
 func (h *ProductHandler) SearchProduct(w http.ResponseWriter, r *http.Request) {
+	// отримання query
 	query := r.URL.Query().Get("q")
 	if query == "" {
 		respondError(w, http.StatusBadRequest, "Search query is required")
 		return
 	}
+
+	// встановлення ліміту за замовчуванням
 	limit := 20
+	// фільтрація
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
 		l, err := strconv.Atoi(limitStr)
 		if err != nil || l <= 0 {
@@ -177,7 +187,9 @@ func (h *ProductHandler) SearchProduct(w http.ResponseWriter, r *http.Request) {
 		limit = l
 	}
 
+	// встановлення зміщення за замовчуванням
 	offset := 0
+	// фільтрація
 	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
 		o, err := strconv.Atoi(offsetStr)
 		if err != nil || o < 0 {
@@ -186,6 +198,7 @@ func (h *ProductHandler) SearchProduct(w http.ResponseWriter, r *http.Request) {
 		offset = o
 	}
 
+	// отримання продуктів за фільтрами
 	products, err := h.ProductSrv.SearchProduct(r.Context(), query, limit, offset)
 	if err != nil {
 		handlerServiceProductError(w, err)
@@ -194,6 +207,7 @@ func (h *ProductHandler) SearchProduct(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, products)
 }
 
+// handlerServiceProductError повертає помилки 
 func handlerServiceProductError(w http.ResponseWriter, err error) {
 	switch err {
 	case productSrv.ErrProductNotFound:

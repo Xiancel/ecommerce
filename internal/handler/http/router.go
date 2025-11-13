@@ -22,6 +22,7 @@ type RouterConfig struct {
 	UserService    userService.UserService
 }
 
+// створення путів
 func NewRouter(config RouterConfig) *chi.Mux {
 	r := chi.NewRouter()
 

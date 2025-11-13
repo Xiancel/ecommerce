@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// UserService інтерфейс для роботи з користувачами
 type UserService interface {
 	GetUser(ctx context.Context, id uuid.UUID) (*models.User, error)
 	ListUser(ctx context.Context, filter UserFilter) (*UserListResponse, error)

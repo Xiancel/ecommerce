@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// CartRepository інтерфейс для роботи з кошиком
 type CartRepository interface {
 	AddItem(ctx context.Context, item *models.CartItem) error
 	GetByUserId(ctx context.Context, userID uuid.UUID) ([]*models.CartItemWithProduct, error)
@@ -29,19 +30,21 @@ func NewCartRepository(db *database.DB) CartRepository {
 	return &CartRepo{db: db}
 }
 
-// AddItem implements CartRepository.
+// AddItem додавання товарів у кошик
 func (c *CartRepo) AddItem(ctx context.Context, item *models.CartItem) error {
 	query := `
 	INSERT INTO cart_items (id, user_id, product_id, quantity, created_at)
 	VALUES ($1, $2, $3, $4, NOW())
 	`
 
+	// додавання нового товару
 	_, err := c.db.ExecContext(ctx, query,
 		item.ID,
 		item.UserID,
 		item.ProductID,
 		item.Quantity,
 	)
+	// обробка помилок
 	if err != nil {
 		return fmt.Errorf("failed to add item: %w", err)
 	}
@@ -49,13 +52,15 @@ func (c *CartRepo) AddItem(ctx context.Context, item *models.CartItem) error {
 	return nil
 }
 
-// Clear implements CartRepository.
+// Clear очищення кошику
 func (c *CartRepo) Clear(ctx context.Context, userId uuid.UUID) error {
 	query := `
 	DELETE FROM cart_items WHERE user_id = $1
 	`
 
+	// очищення кошику за ID користувача
 	_, err := c.db.ExecContext(ctx, query, userId)
+	// обробка помилок
 	if err != nil {
 		return fmt.Errorf("failed to clear cart: %w", err)
 	}
@@ -63,7 +68,7 @@ func (c *CartRepo) Clear(ctx context.Context, userId uuid.UUID) error {
 	return nil
 }
 
-// GetByUserId implements CartRepository.
+// GetByUserId повертає кошик за ID користувача
 func (c *CartRepo) GetByUserId(ctx context.Context, userID uuid.UUID) ([]*models.CartItemWithProduct, error) {
 	var items []*models.CartItemWithProduct
 
@@ -82,13 +87,16 @@ func (c *CartRepo) GetByUserId(ctx context.Context, userID uuid.UUID) ([]*models
 	WHERE ci.user_id = $1
 	`
 
+	// отримання кошика за ID користувача
 	err := c.db.SelectContext(ctx, &items, query, userID)
+	// обробка помилок
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cart items: %w", err)
 	}
 	return items, nil
 }
 
+// GetItemByID повертає товар в кошику по його ID
 func (c *CartRepo) GetItemByID(ctx context.Context, userID, itemID uuid.UUID) (*models.CartItem, error) {
 	var item models.CartItem
 	query := `
@@ -96,6 +104,8 @@ func (c *CartRepo) GetItemByID(ctx context.Context, userID, itemID uuid.UUID) (*
 	FROM cart_items
 	WHERE id = $1 AND user_id = $2
 	`
+
+	// получення товара з кошика за його ID
 	err := c.db.GetContext(ctx, &item, query, itemID, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -106,7 +116,7 @@ func (c *CartRepo) GetItemByID(ctx context.Context, userID, itemID uuid.UUID) (*
 	return &item, nil
 }
 
-// GetItem implements CartRepository.
+// GetItem получення товару
 func (c *CartRepo) GetItem(ctx context.Context, userId uuid.UUID, productId uuid.UUID) (*models.CartItem, error) {
 	var item models.CartItem
 	query := `
@@ -115,7 +125,9 @@ func (c *CartRepo) GetItem(ctx context.Context, userId uuid.UUID, productId uuid
 	WHERE user_id = $1 AND product_id = $2
 	`
 
+	// получення товару
 	err := c.db.GetContext(ctx, &item, query, userId, productId)
+	// обробка помилок
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -125,12 +137,16 @@ func (c *CartRepo) GetItem(ctx context.Context, userId uuid.UUID, productId uuid
 	return &item, nil
 }
 
+// RemoveItem видалення товару з кошика
 func (c *CartRepo) RemoveItem(ctx context.Context, userID, id uuid.UUID) error {
 	query := `
 	DELETE FROM cart_items
 	WHERE id = $1 AND user_id = $2
 	`
+
+	// видалення товару з кошика
 	res, err := c.db.ExecContext(ctx, query, id, userID)
+	// обробка помилок
 	if err != nil {
 		return fmt.Errorf("failed to remove item: %w", err)
 	}
@@ -143,7 +159,7 @@ func (c *CartRepo) RemoveItem(ctx context.Context, userID, id uuid.UUID) error {
 	return nil
 }
 
-// UpdateQuantity implements CartRepository.
+// UpdateQuantity оновлення кількість товару в кошику
 func (c *CartRepo) UpdateQuantity(ctx context.Context, id uuid.UUID, quantity int) error {
 	query := `
 	UPDATE cart_items
@@ -151,7 +167,9 @@ func (c *CartRepo) UpdateQuantity(ctx context.Context, id uuid.UUID, quantity in
 	WHERE id = $2
 	`
 
+	// оновлення кількость товару
 	res, err := c.db.ExecContext(ctx, query, quantity, id)
+	// обробка помилок
 	if err != nil {
 		return fmt.Errorf("failed to update quantity: %w", err)
 	}

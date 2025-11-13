@@ -41,17 +41,20 @@ func (h *CartHandler) RegisterRoutes(r chi.Router) {
 // @Security BearerAuth
 // @Router /cart/items [post]
 func (h *CartHandler) AddItem(w http.ResponseWriter, r *http.Request) {
+	// отримання ID користувача з контексту
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
 		respondError(w, http.StatusUnauthorized, "User not authorized")
 		return
 	}
+	// отримання данних товару з request
 	var req cartSrv.AddCartItemRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
+	// додавання товар у кошик користувача
 	item, err := h.CartSrv.AddItem(r.Context(), userID, req)
 	if err != nil {
 		handlerCartError(w, err)
@@ -76,12 +79,14 @@ func (h *CartHandler) AddItem(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /cart/items/{id} [put]
 func (h *CartHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
+	// отримання ID користувача з контексту
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
 		respondError(w, http.StatusUnauthorized, "User not authorized")
 		return
 	}
 
+	// отримання ID товару
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -89,12 +94,14 @@ func (h *CartHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// отримання данних з request
 	var req cartSrv.UpdateCartItemRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
+	// оновлення товару в кошику
 	item, err := h.CartSrv.UpdateItem(r.Context(), userID, id, req)
 	if err != nil {
 		handlerCartError(w, err)
@@ -118,12 +125,14 @@ func (h *CartHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /cart/items/{id} [delete]
 func (h *CartHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
+	// отримання ID користувача з контексту
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
 		respondError(w, http.StatusUnauthorized, "User not authorized")
 		return
 	}
 
+	// отримання ID товару
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -131,6 +140,7 @@ func (h *CartHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// видалення товару з кошика
 	if err := h.CartSrv.DeleteItem(r.Context(), userID, id); err != nil {
 		handlerCartError(w, err)
 		return
@@ -152,11 +162,14 @@ func (h *CartHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /cart [delete]
 func (h *CartHandler) ClearCart(w http.ResponseWriter, r *http.Request) {
+	// отримання ID користувача з контексту
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
 		respondError(w, http.StatusUnauthorized, "User not authorized")
 		return
 	}
+
+	// очищення кошика користувача 
 	if err := h.CartSrv.ClearItem(r.Context(), userID); err != nil {
 		handlerCartError(w, err)
 		return
@@ -179,11 +192,14 @@ func (h *CartHandler) ClearCart(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router /cart [get]
 func (h *CartHandler) ListItems(w http.ResponseWriter, r *http.Request) {
+	// отримання ID користувача з контексту
 	userID, ok := GetUserIDFromContext(r.Context())
 	if !ok {
 		respondError(w, http.StatusUnauthorized, "User not authorized")
 		return
 	}
+
+	// отримання списку товарів у кошику користувача
 	items, err := h.CartSrv.ListItem(r.Context(), userID)
 	if err != nil {
 		handlerCartError(w, err)
@@ -191,6 +207,8 @@ func (h *CartHandler) ListItems(w http.ResponseWriter, r *http.Request) {
 	}
 	respondJSON(w, http.StatusOK, items)
 }
+
+//  handlerCartError повертає помилки
 func handlerCartError(w http.ResponseWriter, err error) {
 	switch err {
 	case cartSrv.ErrItemNotFound:

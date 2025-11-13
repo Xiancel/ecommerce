@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// ключі контексту
 type contextKey string
 
 const (
@@ -17,37 +18,37 @@ const (
 	ContextKeyUserEmail contextKey = "user_email"
 )
 
+// RequireAuth перевіряє наявність та валідність JWT токена
 func RequireAuth(authSrv authService.AuthService) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// отримання токену
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
 				respondError(w, http.StatusUnauthorized, "Missing auth header")
 				return
 			}
-			// parts := strings.Split(authHeader, " ")
-			// if len(parts) != 2 || parts[0] != "Bearer" {
-			// 	respondError(w, http.StatusUnauthorized, "Invalid auth header format")
-			// 	return
-			// }
+
+			// розділення Bearer або приймання просто токена
 			var tokenString string
 			parts := strings.Split(authHeader, " ")
 			if len(parts) == 2 && parts[0] == "Bearer" {
-				tokenString = parts[1] 
+				tokenString = parts[1]
 			} else if len(parts) == 1 {
-				tokenString = parts[0] 
+				tokenString = parts[0]
 			} else {
 				respondError(w, http.StatusUnauthorized, "Invalid auth header format")
 				return
 			}
 
-			//tokenString := parts[1]
+			// валідуємо токен
 			claims, err := authSrv.ValidateToken(tokenString)
 			if err != nil {
 				respondError(w, http.StatusUnauthorized, "Invalid or expired token")
 				return
 			}
 
+			// додавання данних користувача у контекст запиту
 			ctx := r.Context()
 			ctx = context.WithValue(ctx, ContextKeyUserID, claims.UserID)
 			ctx = context.WithValue(ctx, ContextKeyUserRole, claims.Role)
@@ -58,6 +59,7 @@ func RequireAuth(authSrv authService.AuthService) func(http.Handler) http.Handle
 	}
 }
 
+// RequireAdmin перевірка на роль адміна
 func RequireAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		role, ok := r.Context().Value(ContextKeyUserRole).(string)
@@ -90,16 +92,20 @@ func CORS(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+// GetUserIDFromContext повертає ID користувача з контексту
 func GetUserIDFromContext(ctx context.Context) (uuid.UUID, bool) {
 	userID, ok := ctx.Value(ContextKeyUserID).(uuid.UUID)
 	return userID, ok
 }
 
+// GetUserRoleFromContext повертає роль користувача з контексту
 func GetUserRoleFromContext(ctx context.Context) (string, bool) {
 	role, ok := ctx.Value(ContextKeyUserRole).(string)
 	return role, ok
 }
 
+// GetUserEmailFromContextповертає email користувача з контексту
 func GetUserEmailFromContext(ctx context.Context) (string, bool) {
 	email, ok := ctx.Value(ContextKeyUserEmail).(string)
 	return email, ok

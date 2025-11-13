@@ -2,6 +2,7 @@ package auth
 
 import "errors"
 
+// помилки, пов'язані з антефікацією та авторизацією користувача
 var (
 	ErrUserAlreadyExists  = errors.New("user already exists")
 	ErrEmailRequired      = errors.New("user email is required")
