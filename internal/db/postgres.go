@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	models "github.com/Xiancel/ecommerce/internal/domain"
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -22,36 +20,6 @@ type Config struct {
 	Password string
 	DBName   string
 	SSLMode  string
-}
-
-// Create implements repository.ProductRepository.
-func (c Config) Create(ctx context.Context, product *models.Product) error {
-	panic("unimplemented")
-}
-
-// Delete implements repository.ProductRepository.
-func (c Config) Delete(ctx context.Context, id uuid.UUID) error {
-	panic("unimplemented")
-}
-
-// GetById implements repository.ProductRepository.
-func (c Config) GetById(ctx context.Context, id uuid.UUID) (*models.Product, error) {
-	panic("unimplemented")
-}
-
-// List implements repository.ProductRepository.
-func (c Config) List(ctx context.Context, filter models.ListFilter) ([]*models.Product, error) {
-	panic("unimplemented")
-}
-
-// Update implements repository.ProductRepository.
-func (c Config) Update(ctx context.Context, product *models.Product) error {
-	panic("unimplemented")
-}
-
-// UpdateStock implements repository.ProductRepository.
-func (c Config) UpdateStock(ctx context.Context, id uuid.UUID, quantity int) error {
-	panic("unimplemented")
 }
 
 func NewDB(ctg Config) (*DB, error) {
