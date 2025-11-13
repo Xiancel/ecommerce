@@ -112,7 +112,7 @@ func main() {
 		}
 	}()
 
-	// повернення повідомлень
+	// повернення повідомлення про shutdowb
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
