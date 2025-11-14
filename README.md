@@ -108,4 +108,62 @@ GET    /api/v1/admin/statistics
 
 # Документація
 1. **Swagger** можно переглянути після запуску на endpoint **/swagger/index.html***
-2. **Insomnia** у розроботці
+2. **Insomnia** імпортуйте у Insomnia цей файл - **Insomnia_2025-11-14.yaml**
+
+# Діаграмма проєкту
+```
+Clean Architecture (від центру до країв)
+
+┌──────────────────────────────────────────────┐
+│  Layer 4: Frameworks & Drivers (зовнішній)   ││
+│----------------------------------------------││
+│  - HTTP Server (net/http)                    ││
+│  - Docker, Env, PostgreSQL Driver            ││
+│  - main.go (Dependency Injection)            ││
+│                                              ││
+│  ┌──────────────────────────────────────────┐││
+│  │ Layer 3: Interface Adapters               ││
+│  │-------------------------------------------││
+│  │  Handlers (HTTP)                          ││
+│  │    - AuthHandler                          ││
+│  │    - UserHandler                          ││
+│  │    - ProductHandler                       ││
+│  │    - CartHandler                          ││
+│  │    - OrderHandler                         ││
+│  │  JSON serialization/deserialization       ││
+│  │  Request/Response mapping                 ││
+│  │                                           ││
+│  │  ┌──────────────────────────────────────┐ ││
+│  │  │ Layer 2: Use Cases (Application)     │ ││
+│  │  │--------------------------------------│ ││
+│  │  │  Services                            │ ││
+│  │  │    - AuthService                     │ ││
+│  │  │    - UserService                     │ ││
+│  │  │    - ProductService                  │ ││
+│  │  │    - CartService                     │ ││
+│  │  │    - OrderService                    │ ││
+│  │  │  Бізнес-логіка застосунку            │ ││
+│  │  │                                      │ ││
+│  │  │  ┌──────────────────────────────────┐  ││
+│  │  │  │ Layer 1: Domain (ЯДРО)           │  ││
+│  │  │  │----------------------------------│  ││
+│  │  │  │  Entities                        │  ││
+│  │  │  │    - User                        │  ││
+│  │  │  │    - Product                     │  ││
+│  │  │  │    - Cart                        │  ││
+│  │  │  │    - Order                       │  ││
+│  │  │  │  Business rules                  │  ││
+│  │  │  │  Interfaces                      │  ││
+│  │  │  │    - UserRepository              │  ││
+│  │  │  │    - ProductRepository           │  ││
+│  │  │  │    - CartRepository              │  ││
+│  │  │  │    - OrderRepository             │  ││
+│  │  │  └──────────────────────────────────┘  ││
+│  │  └──────────────────────────────────────┘ ││
+│                                              ││
+└──────────────────────────────────────────────┘│
+│  External Resources                           │
+│    - PostgreSQL                               │
+└──────────────────────────────────────────────┘
+
+```
