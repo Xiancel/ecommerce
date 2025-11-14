@@ -85,6 +85,7 @@ func (h *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 		categoryID, err := uuid.Parse(categoryIDStr)
 		if err != nil {
 			respondError(w, http.StatusBadRequest, "Invalid category ID")
+			return
 		}
 		filter.CategoryID = &categoryID
 	}
@@ -93,6 +94,7 @@ func (h *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 		minPrice, err := strconv.ParseFloat(minPriceStr, 64)
 		if err != nil {
 			respondError(w, http.StatusBadRequest, "Invalid min_price")
+			return
 		}
 		filter.MinPrice = &minPrice
 	}
@@ -101,6 +103,7 @@ func (h *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 		maxPrice, err := strconv.ParseFloat(maxPriceStr, 64)
 		if err != nil {
 			respondError(w, http.StatusBadRequest, "Invalid max_price")
+			return
 		}
 		filter.MaxPrice = &maxPrice
 	}
@@ -119,6 +122,7 @@ func (h *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 		limit, err := strconv.Atoi(limitStr)
 		if err != nil || limit <= 0 {
 			respondError(w, http.StatusBadRequest, "Invalid limit")
+			return
 		}
 		filter.Limit = limit
 	}
@@ -128,6 +132,7 @@ func (h *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 		offset, err := strconv.Atoi(offsetStr)
 		if err != nil || offset < 0 {
 			respondError(w, http.StatusBadRequest, "Invalid Offset")
+			return
 		}
 		filter.Offset = offset
 	}
@@ -207,7 +212,7 @@ func (h *ProductHandler) SearchProduct(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, products)
 }
 
-// handlerServiceProductError повертає помилки 
+// handlerServiceProductError повертає помилки
 func handlerServiceProductError(w http.ResponseWriter, err error) {
 	switch err {
 	case productSrv.ErrProductNotFound:

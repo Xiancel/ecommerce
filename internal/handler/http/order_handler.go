@@ -166,6 +166,7 @@ func (h *OrderHandler) ListOrder(w http.ResponseWriter, r *http.Request) {
 		limit, err := strconv.Atoi(limitStr)
 		if err != nil || limit <= 0 {
 			respondError(w, http.StatusBadRequest, "Invalid limit")
+			return
 		}
 		filter.Limit = limit
 	}
@@ -174,7 +175,7 @@ func (h *OrderHandler) ListOrder(w http.ResponseWriter, r *http.Request) {
 		offset, err := strconv.Atoi(offsetStr)
 		if err != nil || offset < 0 {
 			respondError(w, http.StatusBadRequest, "Invalid Offset")
-
+			return
 		}
 		filter.Offset = offset
 	}
